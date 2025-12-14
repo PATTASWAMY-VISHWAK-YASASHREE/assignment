@@ -29,6 +29,14 @@ Visit http://localhost:5173 and ensure the backend is running at http://localhos
 	- SPA fallback: `frontend/public/404.html` redirects to the base path.
 	- Robots: `frontend/public/robots.txt` allows all crawlers.
 
+### CI/CD pipelines
+- Workflow: `.github/workflows/deploy-pages.yml`
+	- Triggers: push to `main`, pull requests targeting `main`, and manual dispatch.
+	- Jobs: `backend-tests` (pytest with pip cache), `frontend-build` (npm ci + Vite build with npm cache), and `deploy` (GitHub Pages). Deploy runs only on `workflow_dispatch` or pushes to `main`.
+	- Caching: pip cache keyed on `backend/requirements.txt`, npm cache keyed on `frontend/package-lock.json`.
+- To manually redeploy without a push: use **Actions → CI and Deploy (frontend + backend) → Run workflow**.
+- The build artifact from `frontend-build` is reused for deploy; deployments are serialized via the `pages` concurrency group.
+
 ## Features
 - Upload CSV/XLSX, preview first 5 rows, view schema
 - Select target + optional feature columns

@@ -4,4 +4,7 @@ Tool output log
 - web_search (Pydantic v2 migration warnings): stored at mcp_tool_outputs/websearch_output_pydantic_v2_warnings.txt
 - web_search (rare class handling / logistic regression imbalance): stored at mcp_tool_outputs/websearch_output_rare_classes.txt
 - fetch_webpage (scikit-learn LogisticRegression docs): stored at mcp_tool_outputs/fetch_output_logistic_regression.txt
+- web_search (GitHub Actions CI/CD for Vite/React GitHub Pages): stored in session log
+- fetch_webpage (Vite static deploy GitHub Pages): stored at mcp_tool_outputs/fetch_output_vite_github_pages.txt
+- fetch_webpage (GitHub Pages overview): stored at mcp_tool_outputs/fetch_output_github_pages_overview.txt
 - web_search (FastAPI model serving download/predict): stored at mcp_tool_outputs/websearch_output_model_serving_fastapi.txt

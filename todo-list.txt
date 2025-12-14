@@ -1,32 +1,27 @@
-Analysis phase:
-- Understand requirements and core features for no-code ML pipeline builder (upload, preprocessing, split, model selection, execution, visualization).
-- Identify backend architecture (FastAPI, service layer, pandas, scikit-learn) and frontend stack (React+Vite+TypeScript, MUI, React Flow, Zustand, Chart.js/Recharts).
-- Consider edge cases: invalid files, non-numeric columns for scaling, missing target column, single-model constraint.
+Analysis phase (CI/CD refresh):
+- Confirm deployment target (GitHub Pages for frontend) and desired gates (tests/lint/build) before deploy.
+- Identify repo structure: backend (FastAPI/Python) + frontend (Vite/React/TS).
+- Determine runner OS (ubuntu-latest) and caching strategies for npm/pip.
 
-Research phase:
-- Gather references for StandardScaler/MinMaxScaler usage from scikit-learn docs.
-- Review best practices for FastAPI file uploads and React Flow pipeline UIs.
+Research phase (CI/CD patterns):
+- Reference Vite GitHub Pages workflow with npm caching and actions/deploy-pages.
+- Gather best practices for matrix tests, Pages permissions, concurrency, and artifact reuse.
 
 Implementation phase:
-- Scaffold backend structure (main.py, routers, schemas, services).
-- Implement dataset upload endpoint returning metadata and preview.
-- Implement pipeline execution endpoint (preprocessing, split, model train/eval) with error handling.
-- Add dependency files (requirements.txt) and configuration.
-- Scaffold frontend with Vite + TS + MUI + React Flow + Zustand.
-- Build UI components for each step, upload, preprocessing selection, split slider, model choice, run action, metrics/visualizations.
-- Connect frontend to backend APIs with axios and environment config.
-- Add visual pipeline/stepper showing flow and node status.
+- Add/adjust GitHub Actions workflows: one for CI (lint/tests/build) and one for Pages deploy using build artifact.
+- Ensure frontend build uses correct base path and caches npm deps; ensure backend tests run with Python deps cache.
+- Wire artifact handoff from build job to deploy job; set permissions and concurrency.
 
 Testing phase:
-- Manual sanity: run backend uvicorn and hit endpoints with sample CSV.
-- Run frontend dev server and verify end-to-end flow.
+- Run backend pytest locally or via workflow.
+- Run frontend build in workflow.
 
 Documentation phase:
-- Write README with setup/run instructions for backend and frontend on Windows.
-- Summarize architecture and endpoints.
+- Update README with CI/CD workflow overview and how to trigger deploy/manual runs.
 
-Current session tasks (rare-class UX):
-- [x] Add drop_rare_classes toggle in frontend store and wire to payload.
-- [x] Expose toggle in Run panel with tooltip and helper messaging on errors.
-- [x] Update frontend types to include drop_rare_classes flag.
-- [ ] Run backend test suite after changes.
+Current session tasks (CI/CD):
+ [x] Capture web references for GH Pages CI/CD best practices.
+ [x] Review existing workflows and repo config.
+ [x] Draft updated CI/CD plan (jobs, caches, artifacts, triggers).
+ [x] Implement workflow changes (ci.yml + improved deploy-pages.yml as needed).
+ [x] Document and verify lint/tests/build expectations.
