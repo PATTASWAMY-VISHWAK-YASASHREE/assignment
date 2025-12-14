@@ -26,6 +26,7 @@ export type PipelineRunRequest = {
   preprocess: PreprocessStep[];
   split: TrainTestConfig;
   model: ModelType;
+  drop_rare_classes?: boolean;
 };
 
 export type ConfusionMatrix = {
@@ -46,4 +47,15 @@ export type PipelineRunResponse = {
   message?: string;
   warnings?: string[];
   model_type?: ModelType;
+  model_id?: string;
+  model_download_path?: string;
+};
+
+export type PredictRequest = {
+  model_id: string;
+  records: Array<Record<string, unknown>>;
+};
+
+export type PredictResponse = {
+  predictions: Array<string | number>;
 };

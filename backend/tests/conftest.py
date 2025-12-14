@@ -13,13 +13,19 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.main import create_app  # noqa: E402
-from app.services import dataset_service  # noqa: E402
+from app.services import dataset_service, pipeline_service  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
 def reset_dataset_store() -> None:
     """Clear the in-memory dataset store between tests to avoid cross-test leakage."""
     dataset_service._dataset_store.clear()
+
+
+@pytest.fixture(autouse=True)
+def reset_model_store() -> None:
+    """Clear the in-memory model store between tests."""
+    pipeline_service._clear_model_store()
 
 
 @pytest.fixture()

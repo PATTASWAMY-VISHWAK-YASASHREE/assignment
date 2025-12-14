@@ -20,6 +20,15 @@ Visual, step-based UI to build and run ML workflows without code. Backend uses F
 
 Visit http://localhost:5173 and ensure the backend is running at http://localhost:8000.
 
+### Deploy to GitHub Pages (frontend)
+1. Ensure the repo name stays `assignment` or set `VITE_BASE_PATH` accordingly.
+2. Push to `main`; GitHub Actions workflow `.github/workflows/deploy-pages.yml` builds `frontend` and publishes to Pages.
+3. In repository settings → Pages, select the GitHub Actions source (if not already set).
+4. After first deploy, your site will be available at `https://<username>.github.io/assignment/`.
+	- Custom domain: add `CNAME` in repo settings; if you add one, also place a `CNAME` file in `frontend/public/` with that domain.
+	- SPA fallback: `frontend/public/404.html` redirects to the base path.
+	- Robots: `frontend/public/robots.txt` allows all crawlers.
+
 ## Features
 - Upload CSV/XLSX, preview first 5 rows, view schema
 - Select target + optional feature columns

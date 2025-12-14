@@ -31,6 +31,7 @@ class PipelineRunRequest(BaseModel):
     preprocess: List[PreprocessStep] = Field(default_factory=list)
     split: TrainTestConfig = Field(default_factory=TrainTestConfig)
     model: ModelType
+    drop_rare_classes: bool = False
 
     @field_validator("feature_columns", mode="before")
     def ensure_features(cls, value):
@@ -65,3 +66,14 @@ class PipelineRunResponse(BaseModel):
     message: Optional[str] = None
     warnings: List[str] = Field(default_factory=list)
     model_type: Optional[ModelType] = None
+    model_id: Optional[str] = None
+    model_download_path: Optional[str] = None
+
+
+class PredictRequest(BaseModel):
+    model_id: str
+    records: List[Dict[str, Any]]
+
+
+class PredictResponse(BaseModel):
+    predictions: List[Any]

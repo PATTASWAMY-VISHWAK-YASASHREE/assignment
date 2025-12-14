@@ -10,7 +10,7 @@ export default function ResultsPanel() {
   if (!result) return null;
 
   return (
-    <Card>
+    <Card sx={{ height: "100%", minHeight: 320 }}>
       <CardHeader title="7. Results" />
       <CardContent>
         <Stack spacing={2}>

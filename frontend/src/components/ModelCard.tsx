@@ -7,7 +7,7 @@ export default function ModelCard() {
   const setModel = usePipelineStore((s) => s.setModel);
 
   return (
-    <Card>
+    <Card sx={{ height: "100%", minHeight: 320 }}>
       <CardHeader title="5. Choose Model" subheader="One model per run" />
       <CardContent>
         <RadioGroup value={model || ""} onChange={(e) => setModel(e.target.value as any)}>

@@ -97,3 +97,39 @@ def test_run_pipeline_warns_on_non_numeric_preprocess():
 
     assert any("Skipped non-numeric" in msg for msg in response.warnings)
     assert response.accuracy is not None
+
+
+def test_run_pipeline_drops_rare_classes_when_enabled(sample_dataframe):
+    df = pd.DataFrame({"f1": [1, 2, 3, 4], "target": [0, 0, 0, 1]})
+    dataset_id = _store_dataset(df)
+    request = PipelineRunRequest(
+        dataset_id=dataset_id,
+        target_column="target",
+        feature_columns=["f1"],
+        preprocess=[],
+        split=TrainTestConfig(test_size=0.25, random_state=0),
+        model=ModelType.logistic_regression,
+        drop_rare_classes=True,
+    )
+
+    response = asyncio.run(pipeline_service.run_pipeline(request))
+
+    assert response.status == "success"
+    assert any("Dropped classes" in w for w in response.warnings)
+
+
+def test_run_pipeline_rare_classes_error_without_drop(sample_dataframe):
+    df = pd.DataFrame({"f1": [1, 2, 3, 4], "target": [0, 0, 0, 1]})
+    dataset_id = _store_dataset(df)
+    request = PipelineRunRequest(
+        dataset_id=dataset_id,
+        target_column="target",
+        feature_columns=["f1"],
+        preprocess=[],
+        split=TrainTestConfig(test_size=0.25, random_state=0),
+        model=ModelType.logistic_regression,
+        drop_rare_classes=False,
+    )
+
+    with pytest.raises(ValueError, match="least populated classes"):
+        asyncio.run(pipeline_service.run_pipeline(request))

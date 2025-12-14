@@ -16,7 +16,7 @@ export default function SplitCard() {
   const trainPercent = 100 - testPercent;
 
   return (
-    <Card>
+    <Card sx={{ height: "100%", minHeight: 320 }}>
       <CardHeader title="4. Train / Test Split" subheader="Pick how much data is used for testing" />
       <CardContent>
         <Stack spacing={2}>

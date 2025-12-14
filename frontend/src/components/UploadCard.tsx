@@ -36,7 +36,7 @@ export default function UploadCard() {
   };
 
   return (
-    <Card>
+    <Card sx={{ height: "100%", minHeight: 320 }}>
       <CardHeader title="1. Upload Dataset" subheader="Upload CSV or Excel to get started" />
       <CardContent>
         <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">

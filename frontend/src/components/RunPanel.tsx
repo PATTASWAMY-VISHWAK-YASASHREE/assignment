@@ -1,6 +1,21 @@
 import { useState } from "react";
-import { Alert, Box, Button, Card, CardContent, CardHeader, CircularProgress, Stack, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CircularProgress,
+  LinearProgress,
+  FormControlLabel,
+  Stack,
+  Switch,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 
 import api from "../api";
 import { PipelineRunResponse } from "../types";
@@ -34,6 +49,7 @@ export default function RunPanel() {
         preprocess: store.preprocessSteps,
         split: store.split,
         model: store.model,
+        drop_rare_classes: store.dropRareClasses,
       };
 
       const { data } = await api.post<PipelineRunResponse>("/pipeline/run", payload);
@@ -47,10 +63,18 @@ export default function RunPanel() {
   };
 
   return (
-    <Card>
+    <Card sx={{ height: "100%", minHeight: 320 }}>
       <CardHeader title="6. Run Pipeline" subheader="Execute the configured workflow" />
       <CardContent>
         <Stack spacing={2}>
+          {store.running && (
+            <Box>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Training in progress… powering up the model ⚡
+              </Typography>
+              <LinearProgress />
+            </Box>
+          )}
           {error && <Alert severity="error">{error}</Alert>}
           <Box display="flex" alignItems="center" gap={2}>
             <Button
@@ -66,12 +90,42 @@ export default function RunPanel() {
                 Accuracy: {(store.result.accuracy ?? 0).toFixed(3)}
               </Typography>
             )}
+            {store.result?.model_download_path && (
+              <Button
+                variant="outlined"
+                color="secondary"
+                startIcon={<CloudDownloadIcon />}
+                href={`${window.location.origin}${store.result.model_download_path}`}
+              >
+                Download model
+              </Button>
+            )}
           </Box>
+          <Tooltip
+            placement="right"
+            title="If your target has classes with only one sample, enable this to drop them instead of failing."
+          >
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={store.dropRareClasses}
+                  onChange={(e) => store.setDropRareClasses(e.target.checked)}
+                  color="primary"
+                />
+              }
+              label="Drop rare classes (≤1 sample)"
+            />
+          </Tooltip>
           {store.result?.warnings?.length ? (
             <Alert severity="warning">
               {store.result.warnings.map((w, idx) => (
                 <div key={idx}>{w}</div>
               ))}
+            </Alert>
+          ) : null}
+          {error?.toLowerCase().includes("least populated classes") ? (
+            <Alert severity="info">
+              Tip: Your target has classes with only one sample. Toggle "Drop rare classes" to automatically remove them and retry.
             </Alert>
           ) : null}
         </Stack>

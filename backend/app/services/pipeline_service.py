@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from typing import List, Optional
+import pickle
+from dataclasses import dataclass
+from threading import RLock
+from typing import Any, Dict, List, Optional, Tuple
+from uuid import uuid4
 
 import numpy as np
 import pandas as pd
@@ -13,12 +17,30 @@ from sklearn.tree import DecisionTreeClassifier
 from app.schemas.pipeline import (
     PipelineRunRequest,
     PipelineRunResponse,
+    PredictResponse,
     ConfusionMatrix,
     FeatureImportance,
     ModelType,
     PreprocessType,
 )
 from app.services import dataset_service
+
+
+@dataclass
+class TrainedModelArtifact:
+    model: Any
+    feature_columns: List[str]
+    numeric_fill: Dict[str, Any]
+    categorical_fill: Dict[str, Any]
+    preprocessors: List[Tuple[str, List[str], Any]]
+    ohe_columns: List[str]
+    label_encoder: Optional[LabelEncoder]
+    model_type: ModelType
+    target_labels: List[Any]
+
+
+_model_store: Dict[str, TrainedModelArtifact] = {}
+_model_lock = RLock()
 
 
 async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
@@ -36,11 +58,18 @@ async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
     target = df[request.target_column]
 
     # Basic imputations
+    numeric_fill: Dict[str, Any] = {}
+    categorical_fill: Dict[str, Any] = {}
+
     for col in df_features.columns:
         if pd.api.types.is_numeric_dtype(df_features[col]):
-            df_features[col] = df_features[col].fillna(df_features[col].median())
+            fill_value = df_features[col].median()
+            numeric_fill[col] = fill_value
+            df_features[col] = df_features[col].fillna(fill_value)
         else:
-            df_features[col] = df_features[col].fillna(df_features[col].mode().iloc[0])
+            fill_value = df_features[col].mode().iloc[0]
+            categorical_fill[col] = fill_value
+            df_features[col] = df_features[col].fillna(fill_value)
     if target.isna().any():
         fill_value = target.mode().iloc[0]
         target = target.fillna(fill_value)
@@ -49,6 +78,7 @@ async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
     numeric_cols = [c for c in df_features.columns if pd.api.types.is_numeric_dtype(df_features[c])]
 
     # Apply preprocessing steps on numeric columns
+    preprocessors: List[Tuple[str, List[str], Any]] = []
     for step in request.preprocess:
         cols_to_scale: List[str]
         if step.columns:
@@ -66,15 +96,49 @@ async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
 
         scaler = StandardScaler() if step.step == PreprocessType.standardize else MinMaxScaler()
         df_features[cols_to_scale] = scaler.fit_transform(df_features[cols_to_scale])
+        preprocessors.append((step.step.value, cols_to_scale, scaler))
 
     # One-hot encode remaining categorical columns
     df_features = pd.get_dummies(df_features, drop_first=False)
+    ohe_columns = list(df_features.columns)
 
     # Encode target if needed
     label_encoder: Optional[LabelEncoder] = None
     if not pd.api.types.is_numeric_dtype(target):
         label_encoder = LabelEncoder()
         target = label_encoder.fit_transform(target)
+
+    # Guard against rare classes
+    unique, counts = np.unique(target, return_counts=True)
+    rare = {cls: int(cnt) for cls, cnt in zip(unique, counts) if cnt < 2}
+    if rare:
+        if request.drop_rare_classes:
+            mask = ~pd.Series(target).isin(list(rare.keys()))
+            df_features = df_features.loc[mask].reset_index(drop=True)
+            target = target[mask]
+            warnings.append(
+                "Dropped classes with <2 samples: " + ", ".join(str(k) for k in rare.keys())
+            )
+            # re-check after drop
+            unique, counts = np.unique(target, return_counts=True)
+            if len(unique) < 2:
+                warnings.append(
+                    "Insufficient classes after dropping rare classes; skipping model training."
+                )
+                return PipelineRunResponse(
+                    status="success",
+                    accuracy=None,
+                    model_type=request.model,
+                    confusion_matrix=None,
+                    feature_importances=None,
+                    warnings=warnings,
+                )
+        else:
+            cls_list = ", ".join([f"{cls} ({cnt})" for cls, cnt in rare.items()])
+            raise ValueError(
+                "The least populated classes have fewer than 2 samples. "
+                f"Classes with too few members: {cls_list}. Enable drop_rare_classes to filter them."
+            )
 
     X_train, X_test, y_train, y_test = train_test_split(
         df_features,
@@ -96,6 +160,20 @@ async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
 
     feature_importances = _extract_feature_importance(model, df_features.columns)
 
+    artifact = TrainedModelArtifact(
+        model=model,
+        feature_columns=feature_cols,
+        numeric_fill=numeric_fill,
+        categorical_fill=categorical_fill,
+        preprocessors=preprocessors,
+        ohe_columns=ohe_columns,
+        label_encoder=label_encoder,
+        model_type=request.model,
+        target_labels=labels,
+    )
+    model_id = _save_model(artifact)
+    download_path = f"/api/pipeline/model/{model_id}/download"
+
     return PipelineRunResponse(
         status="success",
         accuracy=acc,
@@ -103,13 +181,53 @@ async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
         confusion_matrix=ConfusionMatrix(labels=labels, matrix=cm_matrix),
         feature_importances=feature_importances,
         warnings=warnings,
+        model_id=model_id,
+        model_download_path=download_path,
     )
+
+
+async def predict(model_id: str, records: List[Dict[str, Any]]) -> PredictResponse:
+    artifact = _get_model(model_id)
+    if not records:
+        raise ValueError("Provide at least one record to predict.")
+
+    df = pd.DataFrame(records)
+    missing = [c for c in artifact.feature_columns if c not in df.columns]
+    if missing:
+        raise ValueError(f"Missing feature columns: {', '.join(missing)}")
+
+    df_features = df[artifact.feature_columns].copy()
+
+    for col, fill_value in artifact.numeric_fill.items():
+        if col in df_features.columns:
+            df_features[col] = df_features[col].fillna(fill_value)
+    for col, fill_value in artifact.categorical_fill.items():
+        if col in df_features.columns:
+            df_features[col] = df_features[col].fillna(fill_value)
+
+    for _, cols, scaler in artifact.preprocessors:
+        cols_to_scale = [c for c in cols if c in df_features.columns]
+        if cols_to_scale:
+            df_features[cols_to_scale] = scaler.transform(df_features[cols_to_scale])
+
+    df_features = pd.get_dummies(df_features, drop_first=False)
+    df_features = df_features.reindex(columns=artifact.ohe_columns, fill_value=0)
+
+    preds = artifact.model.predict(df_features)
+    if artifact.label_encoder:
+        preds = artifact.label_encoder.inverse_transform(preds)
+
+    return PredictResponse(predictions=[_convert_pred(v) for v in preds])
+
+
+def download_model_bytes(model_id: str) -> bytes:
+    artifact = _get_model(model_id)
+    return pickle.dumps(artifact)
 
 
 def _build_model(model_type: ModelType):
     if model_type == ModelType.logistic_regression:
-        # Use 'saga' solver for parallel processing and set n_jobs=-1 to use all CPU cores
-        return LogisticRegression(max_iter=1000, solver='saga', n_jobs=-1)
+        return LogisticRegression(max_iter=1000, solver="lbfgs")
     if model_type == ModelType.decision_tree:
         return DecisionTreeClassifier(random_state=42)
     raise ValueError("Unsupported model type")
@@ -134,3 +252,28 @@ def _extract_feature_importance(model, feature_names: List[str]):
     # sort and keep top 15
     importances = sorted(importances, key=lambda x: x.importance, reverse=True)
     return importances[:15]
+
+
+def _save_model(artifact: TrainedModelArtifact) -> str:
+    model_id = str(uuid4())
+    with _model_lock:
+        _model_store[model_id] = artifact
+    return model_id
+
+
+def _get_model(model_id: str) -> TrainedModelArtifact:
+    with _model_lock:
+        if model_id not in _model_store:
+            raise ValueError("Model not found. Please re-run the pipeline.")
+        return _model_store[model_id]
+
+
+def _convert_pred(value: Any) -> Any:
+    if isinstance(value, (np.generic,)):
+        return value.item()
+    return value
+
+
+def _clear_model_store():  # pragma: no cover - test helper
+    with _model_lock:
+        _model_store.clear()

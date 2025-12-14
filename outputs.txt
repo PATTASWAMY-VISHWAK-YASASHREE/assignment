@@ -2,3 +2,6 @@ Tool output log
 - fetch_webpage (scikit-learn preprocessing): stored at mcp_tool_outputs/fetch_output_scikit_preprocessing.txt
 - web_search (FastAPI pytest unit test example request client APIRouter services pattern dataset pipeline): stored at mcp_tool_outputs/websearch_output_fastapi_testing.txt
 - web_search (Pydantic v2 migration warnings): stored at mcp_tool_outputs/websearch_output_pydantic_v2_warnings.txt
+- web_search (rare class handling / logistic regression imbalance): stored at mcp_tool_outputs/websearch_output_rare_classes.txt
+- fetch_webpage (scikit-learn LogisticRegression docs): stored at mcp_tool_outputs/fetch_output_logistic_regression.txt
+- web_search (FastAPI model serving download/predict): stored at mcp_tool_outputs/websearch_output_model_serving_fastapi.txt

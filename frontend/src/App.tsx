@@ -1,4 +1,4 @@
-import { Container, Grid, Stack, Typography, Box } from "@mui/material";
+import { Container, Grid, Stack, Typography, Box, Divider } from "@mui/material";
 
 import UploadCard from "./components/UploadCard";
 import DataOverview from "./components/DataOverview";
@@ -8,10 +8,11 @@ import ModelCard from "./components/ModelCard";
 import RunPanel from "./components/RunPanel";
 import ResultsPanel from "./components/ResultsPanel";
 import FlowCanvas from "./components/FlowCanvas";
+import PlaygroundCard from "./components/PlaygroundCard";
 
 export default function App() {
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
       <Stack spacing={3}>
         <Box display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={2}>
           <Box>
@@ -19,36 +20,43 @@ export default function App() {
               No-Code ML Pipeline Builder
             </Typography>
             <Typography color="text.secondary">
-              Drag-and-drop inspired flow to build ML pipelines without code.
+              Guided steps to upload data, configure preprocessing, and run models.
             </Typography>
           </Box>
         </Box>
 
         <FlowCanvas />
 
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6} lg={4}>
+        <Grid container rowSpacing={3} columnSpacing={3} alignItems="stretch">
+          <Grid item xs={12} md={6}>
             <UploadCard />
           </Grid>
-          <Grid item xs={12} md={6} lg={8}>
+          <Grid item xs={12} md={6}>
             <DataOverview />
           </Grid>
-          <Grid item xs={12} md={6} lg={6}>
+
+          <Grid item xs={12} md={6}>
             <PreprocessCard />
           </Grid>
-          <Grid item xs={12} md={6} lg={6}>
+          <Grid item xs={12} md={6}>
             <SplitCard />
           </Grid>
-          <Grid item xs={12} md={6} lg={6}>
+
+          <Grid item xs={12} md={6}>
             <ModelCard />
           </Grid>
-          <Grid item xs={12} md={6} lg={6}>
+          <Grid item xs={12} md={6}>
             <RunPanel />
           </Grid>
           <Grid item xs={12}>
             <ResultsPanel />
           </Grid>
         </Grid>
+
+        <Divider textAlign="left">Playground</Divider>
+        <Box>
+          <PlaygroundCard />
+        </Box>
       </Stack>
     </Container>
   );

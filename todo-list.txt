@@ -24,3 +24,9 @@ Testing phase:
 Documentation phase:
 - Write README with setup/run instructions for backend and frontend on Windows.
 - Summarize architecture and endpoints.
+
+Current session tasks (rare-class UX):
+- [x] Add drop_rare_classes toggle in frontend store and wire to payload.
+- [x] Expose toggle in Run panel with tooltip and helper messaging on errors.
+- [x] Update frontend types to include drop_rare_classes flag.
+- [ ] Run backend test suite after changes.
