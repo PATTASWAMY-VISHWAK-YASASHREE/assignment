@@ -1,15 +1,15 @@
 from functools import lru_cache
 from typing import List
 
-from pydantic import BaseSettings, AnyHttpUrl
+from pydantic import AnyHttpUrl
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     app_name: str = "No-Code ML Pipeline Builder"
     cors_origins: List[AnyHttpUrl] = []
 
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file=".env")
 
 
 @lru_cache()

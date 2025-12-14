@@ -108,7 +108,8 @@ async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
 
 def _build_model(model_type: ModelType):
     if model_type == ModelType.logistic_regression:
-        return LogisticRegression(max_iter=1000, n_jobs=-1)
+        # Use 'saga' solver for parallel processing and set n_jobs=-1 to use all CPU cores
+        return LogisticRegression(max_iter=1000, solver='saga', n_jobs=-1)
     if model_type == ModelType.decision_tree:
         return DecisionTreeClassifier(random_state=42)
     raise ValueError("Unsupported model type")

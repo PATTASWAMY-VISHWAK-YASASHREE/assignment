@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from io import BytesIO
 from typing import Dict
+from threading import RLock
 from uuid import uuid4
 
 import pandas as pd
@@ -9,7 +10,11 @@ from fastapi import UploadFile
 
 from app.schemas.dataset import DatasetUploadResponse
 
+# WARNING: _dataset_store is protected by _dataset_lock.
+# Direct access to _dataset_store is NOT thread-safe and should only be done in tests.
+# All production code must access datasets via get_dataset and save_dataset.
 _dataset_store: Dict[str, pd.DataFrame] = {}
+_dataset_lock = RLock()
 
 
 def _read_dataframe(file: UploadFile, content: bytes) -> pd.DataFrame:
@@ -23,9 +28,10 @@ def _read_dataframe(file: UploadFile, content: bytes) -> pd.DataFrame:
 
 
 def get_dataset(dataset_id: str) -> pd.DataFrame:
-    if dataset_id not in _dataset_store:
-        raise ValueError("Dataset not found. Please upload again.")
-    return _dataset_store[dataset_id]
+    with _dataset_lock:
+        if dataset_id not in _dataset_store:
+            raise ValueError("Dataset not found. Please upload again.")
+        return _dataset_store[dataset_id]
 
 
 async def save_dataset(file: UploadFile) -> DatasetUploadResponse:
@@ -38,7 +44,8 @@ async def save_dataset(file: UploadFile) -> DatasetUploadResponse:
         raise ValueError("Dataset contains no rows.")
 
     dataset_id = str(uuid4())
-    _dataset_store[dataset_id] = df
+    with _dataset_lock:
+        _dataset_store[dataset_id] = df
 
     preview = df.head(5).fillna("null").to_dict(orient="records")
     dtypes = {col: str(dtype) for col, dtype in df.dtypes.items()}

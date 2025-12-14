@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List, Optional, Dict, Any
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class PreprocessType(str, Enum):
@@ -32,13 +32,19 @@ class PipelineRunRequest(BaseModel):
     split: TrainTestConfig = Field(default_factory=TrainTestConfig)
     model: ModelType
 
-    @validator("feature_columns", always=True)
-    def ensure_features(cls, v, values):
-        if v is None:
+    @field_validator("feature_columns", mode="before")
+    def ensure_features(cls, value):
+        """
+        Normalize empty/absent feature selections to ``None``.
+
+        ``mode="before"`` runs prior to Pydantic's own parsing so we can turn
+        an empty list (or missing value) into ``None`` before any further
+        validation. This keeps downstream logic simple because we only need to
+        check for ``None`` instead of handling both ``None`` and ``[]``.
+        """
+        if value is None or (isinstance(value, list) and len(value) == 0):
             return None
-        if len(v) == 0:
-            return None
-        return v
+        return value
 
 
 class ConfusionMatrix(BaseModel):
