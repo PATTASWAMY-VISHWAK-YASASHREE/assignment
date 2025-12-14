@@ -32,10 +32,12 @@ Visit http://localhost:5173 and ensure the backend is running at http://localhos
 ### CI/CD pipelines
 - Workflow: `.github/workflows/deploy-pages.yml`
 	- Triggers: push to `main`, pull requests targeting `main`, and manual dispatch.
-	- Jobs: `backend-tests` (pytest with pip cache), `frontend-build` (npm ci + Vite build with npm cache), and `deploy` (GitHub Pages). Deploy runs only on `workflow_dispatch` or pushes to `main`.
+	- Jobs: `backend-tests` (pytest with pip cache), `frontend-build` (npm ci + Vite build with npm cache), `deploy` (GitHub Pages), and `cloudflare-pages` (Wrangler deploy). Deploy jobs run only on `workflow_dispatch` or pushes to `main`.
 	- Caching: pip cache keyed on `backend/requirements.txt`, npm cache keyed on `frontend/package-lock.json`.
 - To manually redeploy without a push: use **Actions → CI and Deploy (frontend + backend) → Run workflow**.
-- The build artifact from `frontend-build` is reused for deploy; deployments are serialized via the `pages` concurrency group.
+- GitHub Pages deploy uses the uploaded Pages artifact; Cloudflare Pages uses the `frontend-dist` artifact and requires secrets `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` plus an existing Pages project named `assignment` (or adjust the project name and base path).
+- GitHub Pages deploy uses the uploaded Pages artifact; Cloudflare Pages uses the `frontend-dist` artifact and requires secrets `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` plus an existing Pages project named `assignment` (or adjust the project name and base path).
+- Cloudflare direct-upload defaults (if you run locally): `wrangler pages deploy` will pick up `pages_build_output_dir` from `wrangler.toml` (`frontend/dist`). If you use the Cloudflare UI git integration instead, set build command `npm ci && npm run build` and output directory `frontend/dist`.
 
 ## Features
 - Upload CSV/XLSX, preview first 5 rows, view schema

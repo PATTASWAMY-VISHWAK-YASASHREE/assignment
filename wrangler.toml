@@ -1,0 +1,7 @@
+# Cloudflare Pages configuration for direct uploads via Wrangler
+# Adjust `name` to your Pages project name. The GitHub Actions workflow uses this in the
+# `cloudflare-pages` job. Compatibility date can be updated as needed.
+name = "assignment"
+compatibility_date = "2025-12-14"
+# This points Wrangler to the Vite build output for Pages deploys.
+pages_build_output_dir = "frontend/dist"
