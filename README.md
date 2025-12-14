@@ -38,6 +38,7 @@ Visit http://localhost:5173 and ensure the backend is running at http://localhos
 - GitHub Pages deploy uses the uploaded Pages artifact; Cloudflare Pages uses the `frontend-dist` artifact and requires secrets `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` plus an existing Pages project named `assignment` (or adjust the project name and base path).
 - GitHub Pages deploy uses the uploaded Pages artifact; Cloudflare Pages uses the `frontend-dist` artifact and requires secrets `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` plus an existing Pages project named `assignment` (or adjust the project name and base path).
 - Cloudflare direct-upload defaults (if you run locally): `wrangler pages deploy` will pick up `pages_build_output_dir` from `wrangler.toml` (`frontend/dist`). If you use the Cloudflare UI git integration instead, set build command `npm ci && npm run build` and output directory `frontend/dist`.
+- If you configure a custom deploy command in Cloudflare Pages, ensure it is `wrangler pages deploy` (not `wrangler deploy`, which is for Workers and will fail). Example: `npx wrangler pages deploy frontend/dist --project-name=assignment --branch=main`.
 
 ## Features
 - Upload CSV/XLSX, preview first 5 rows, view schema
