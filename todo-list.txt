@@ -24,4 +24,4 @@ Current session tasks (CI/CD):
  [x] Review existing workflows and repo config.
  [x] Draft updated CI/CD plan (jobs, caches, artifacts, triggers).
  [x] Implement workflow changes (ci.yml + improved deploy-pages.yml as needed).
- [x] Document and verify lint/tests/build expectations.
+ [x] Document and verify lint/tests/build expectations
