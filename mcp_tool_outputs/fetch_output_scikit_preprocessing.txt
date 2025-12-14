@@ -1,0 +1,9 @@
+Source: https://scikit-learn.org/stable/modules/preprocessing.html#standardization-or-mean-removal-and-variance-scaling
+Summary notes:
+- StandardScaler standardizes features to zero mean and unit variance; use fit on train then transform train/test.
+- MinMaxScaler scales features to a given range (default [0,1]); fit on training data then transform train/test with learned scale_ and min_.
+- Example code: scaler = StandardScaler().fit(X_train); X_train_scaled = scaler.transform(X_train); X_test_scaled = scaler.transform(X_test).
+- MinMaxScaler example: min_max_scaler = MinMaxScaler(); X_train_minmax = min_max_scaler.fit_transform(X_train); X_test_minmax = min_max_scaler.transform(X_test).
+- Suitable for use in sklearn Pipeline; both support sparse input with proper parameters.
+- StandardScaler parameters: with_mean, with_std.
+- Motivations: feature scale consistency improves model performance.

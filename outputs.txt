@@ -1,0 +1,2 @@
+Tool output log
+- fetch_webpage (scikit-learn preprocessing): stored at mcp_tool_outputs/fetch_output_scikit_preprocessing.txt

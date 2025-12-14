@@ -1,0 +1,26 @@
+Analysis phase:
+- Understand requirements and core features for no-code ML pipeline builder (upload, preprocessing, split, model selection, execution, visualization).
+- Identify backend architecture (FastAPI, service layer, pandas, scikit-learn) and frontend stack (React+Vite+TypeScript, MUI, React Flow, Zustand, Chart.js/Recharts).
+- Consider edge cases: invalid files, non-numeric columns for scaling, missing target column, single-model constraint.
+
+Research phase:
+- Gather references for StandardScaler/MinMaxScaler usage from scikit-learn docs.
+- Review best practices for FastAPI file uploads and React Flow pipeline UIs.
+
+Implementation phase:
+- Scaffold backend structure (main.py, routers, schemas, services).
+- Implement dataset upload endpoint returning metadata and preview.
+- Implement pipeline execution endpoint (preprocessing, split, model train/eval) with error handling.
+- Add dependency files (requirements.txt) and configuration.
+- Scaffold frontend with Vite + TS + MUI + React Flow + Zustand.
+- Build UI components for each step, upload, preprocessing selection, split slider, model choice, run action, metrics/visualizations.
+- Connect frontend to backend APIs with axios and environment config.
+- Add visual pipeline/stepper showing flow and node status.
+
+Testing phase:
+- Manual sanity: run backend uvicorn and hit endpoints with sample CSV.
+- Run frontend dev server and verify end-to-end flow.
+
+Documentation phase:
+- Write README with setup/run instructions for backend and frontend on Windows.
+- Summarize architecture and endpoints.
