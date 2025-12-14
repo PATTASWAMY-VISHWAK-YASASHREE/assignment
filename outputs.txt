@@ -11,3 +11,5 @@ Tool output log
 - web_search (Cloudflare Pages wrangler deploy): stored at mcp_tool_outputs/websearch_output_cloudflare_pages_wrangler.txt
 - web_search (FastAPI model serving download/predict): stored at mcp_tool_outputs/websearch_output_model_serving_fastapi.txt
  - fetch_webpage (https://8f1cb147.assignment-bzd.pages.dev): stored at mcp_tool_outputs/fetch_output_assignment_pages_dev.txt
+ - fetch_webpage (https://8f1cb147.assignment-bzd.pages.dev - latest): stored at mcp_tool_outputs/fetch_output_8f1cb147_assignment.txt
+ - web_search (Vite base path Cloudflare Pages MIME/css 404): stored at mcp_tool_outputs/websearch_output_cloudflare_pages_vite_base.txt
