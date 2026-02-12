@@ -8,6 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_name: str = "No-Code ML Pipeline Builder"
     cors_origins: List[AnyHttpUrl] = []
+    API_KEY: str = "default-insecure-key"
 
     model_config = SettingsConfigDict(env_file=".env")
 
