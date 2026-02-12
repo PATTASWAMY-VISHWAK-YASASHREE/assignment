@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import pickle
 from dataclasses import dataclass
 from threading import RLock
@@ -44,6 +45,16 @@ _model_lock = RLock()
 
 
 async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
+    """
+    Asynchronously runs the pipeline by offloading the CPU-bound task to a thread.
+    """
+    return await asyncio.to_thread(_run_pipeline_sync, request)
+
+
+def _run_pipeline_sync(request: PipelineRunRequest) -> PipelineRunResponse:
+    """
+    Synchronous implementation of the pipeline logic.
+    """
     df = dataset_service.get_dataset(request.dataset_id).copy()
     warnings: List[str] = []
 
