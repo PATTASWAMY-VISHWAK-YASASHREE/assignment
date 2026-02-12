@@ -200,10 +200,11 @@ async def predict(model_id: str, records: List[Dict[str, Any]]) -> PredictRespon
 
     for col, fill_value in artifact.numeric_fill.items():
         if col in df_features.columns:
+            df_features[col] = pd.to_numeric(df_features[col], errors='coerce')
             df_features[col] = df_features[col].fillna(fill_value)
     for col, fill_value in artifact.categorical_fill.items():
         if col in df_features.columns:
-            df_features[col] = df_features[col].fillna(fill_value)
+            df_features[col] = df_features[col].fillna(fill_value).astype(str)
 
     for _, cols, scaler in artifact.preprocessors:
         cols_to_scale = [c for c in cols if c in df_features.columns]
