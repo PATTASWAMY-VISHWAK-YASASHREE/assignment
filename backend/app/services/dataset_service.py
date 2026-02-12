@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from io import BytesIO
 from typing import Dict
 from threading import RLock
@@ -18,8 +19,7 @@ _dataset_store: Dict[str, pd.DataFrame] = {}
 _dataset_lock = RLock()
 
 
-def _read_dataframe(file: UploadFile, content: bytes) -> pd.DataFrame:
-    filename = file.filename or ""
+def _read_dataframe(filename: str, content: bytes) -> pd.DataFrame:
     lowered = filename.lower()
     if lowered.endswith(".csv"):
         return pd.read_csv(BytesIO(content))
@@ -55,10 +55,11 @@ async def save_dataset(file: UploadFile) -> DatasetUploadResponse:
     if not content:
         raise ValueError("Uploaded file is empty.")
 
-    # Convert bytearray back to bytes for compatibility
-    content = bytes(content)
+    filename = file.filename or ""
+    loop = asyncio.get_running_loop()
+    # Offload blocking IO/CPU task to a thread pool
+    df = await loop.run_in_executor(None, _read_dataframe, filename, content)
 
-    df = _read_dataframe(file, content)
     if df.empty:
         raise ValueError("Dataset contains no rows.")
 

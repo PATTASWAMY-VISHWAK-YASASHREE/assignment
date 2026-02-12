@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_name: str = "No-Code ML Pipeline Builder"
     cors_origins: List[AnyHttpUrl] = []
-    MAX_UPLOAD_SIZE_BYTES: int = 10 * 1024 * 1024  # 10 MB
+    API_KEY: str = "default-insecure-key"
 
     model_config = SettingsConfigDict(env_file=".env")
 
