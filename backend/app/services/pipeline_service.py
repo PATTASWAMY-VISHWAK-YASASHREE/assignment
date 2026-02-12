@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import pickle
 from dataclasses import dataclass
 from threading import RLock
@@ -186,8 +187,8 @@ async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
     )
 
 
-async def predict(model_id: str, records: List[Dict[str, Any]]) -> PredictResponse:
-    artifact = _get_model(model_id)
+
+def _predict_sync(artifact: TrainedModelArtifact, records: List[Dict[str, Any]]) -> PredictResponse:
     if not records:
         raise ValueError("Provide at least one record to predict.")
 
@@ -218,6 +219,11 @@ async def predict(model_id: str, records: List[Dict[str, Any]]) -> PredictRespon
         preds = artifact.label_encoder.inverse_transform(preds)
 
     return PredictResponse(predictions=[_convert_pred(v) for v in preds])
+
+
+async def predict(model_id: str, records: List[Dict[str, Any]]) -> PredictResponse:
+    artifact = _get_model(model_id)
+    return await asyncio.to_thread(_predict_sync, artifact, records)
 
 
 def download_model_bytes(model_id: str) -> bytes:
