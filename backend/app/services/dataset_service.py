@@ -9,6 +9,7 @@ import pandas as pd
 from fastapi import UploadFile
 
 from app.schemas.dataset import DatasetUploadResponse
+from app.core.config import settings
 
 # WARNING: _dataset_store is protected by _dataset_lock.
 # Direct access to _dataset_store is NOT thread-safe and should only be done in tests.
@@ -35,9 +36,27 @@ def get_dataset(dataset_id: str) -> pd.DataFrame:
 
 
 async def save_dataset(file: UploadFile) -> DatasetUploadResponse:
-    content = await file.read()
+    # Check file size by reading in chunks to avoid memory exhaustion
+    # and to validate size before processing.
+    MAX_SIZE = settings.MAX_UPLOAD_SIZE_BYTES
+    chunk_size = 1024 * 1024  # 1MB chunks
+    content = bytearray()
+
+    while True:
+        chunk = await file.read(chunk_size)
+        if not chunk:
+            break
+        content.extend(chunk)
+        if len(content) > MAX_SIZE:
+            raise ValueError(
+                f"Uploaded file exceeds the maximum allowed size of {MAX_SIZE} bytes."
+            )
+
     if not content:
         raise ValueError("Uploaded file is empty.")
+
+    # Convert bytearray back to bytes for compatibility
+    content = bytes(content)
 
     df = _read_dataframe(file, content)
     if df.empty:
