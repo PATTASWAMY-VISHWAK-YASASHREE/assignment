@@ -14,6 +14,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from app.main import create_app  # noqa: E402
 from app.services import dataset_service, pipeline_service  # noqa: E402
+from app.core.config import settings
 
 
 @pytest.fixture(autouse=True)
@@ -55,4 +56,5 @@ def app():
 @pytest.fixture()
 def client(app) -> Generator[TestClient, None, None]:
     with TestClient(app) as client:
+        client.headers.update({"X-API-Key": settings.API_KEY})
         yield client
