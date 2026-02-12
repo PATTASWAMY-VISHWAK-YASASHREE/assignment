@@ -44,7 +44,7 @@ _model_lock = RLock()
 
 
 async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
-    df = dataset_service.get_dataset(request.dataset_id).copy()
+    df = dataset_service.get_dataset(request.dataset_id)
     warnings: List[str] = []
 
     if request.target_column not in df.columns:
