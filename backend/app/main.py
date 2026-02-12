@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import datasets, pipeline
 from app.core.config import settings
+from app.core.security import get_api_key
 
 
 def create_app() -> FastAPI:
@@ -16,8 +17,8 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    app.include_router(datasets.router, prefix="/api")
-    app.include_router(pipeline.router, prefix="/api")
+    app.include_router(datasets.router, prefix="/api", dependencies=[Depends(get_api_key)])
+    app.include_router(pipeline.router, prefix="/api", dependencies=[Depends(get_api_key)])
 
     @app.get("/api/health")
     async def health() -> dict:
