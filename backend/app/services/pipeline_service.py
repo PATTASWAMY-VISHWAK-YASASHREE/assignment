@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import pickle
 from dataclasses import dataclass
 from threading import RLock
@@ -45,6 +46,11 @@ _model_lock = RLock()
 
 
 async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
+    # Offload the blocking CPU-bound pipeline execution to a separate thread
+    return await asyncio.to_thread(_run_pipeline_sync, request)
+
+
+def _run_pipeline_sync(request: PipelineRunRequest) -> PipelineRunResponse:
     df = dataset_service.get_dataset(request.dataset_id)
     warnings: List[str] = []
 
@@ -129,6 +135,10 @@ async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
 
 
 async def predict(model_id: str, records: List[Dict[str, Any]]) -> PredictResponse:
+    return await asyncio.to_thread(_predict_sync, model_id, records)
+
+
+def _predict_sync(model_id: str, records: List[Dict[str, Any]]) -> PredictResponse:
     artifact = _get_model(model_id)
     if not records:
         raise ValueError("Provide at least one record to predict.")
