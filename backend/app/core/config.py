@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     app_name: str = "No-Code ML Pipeline Builder"
     cors_origins: List[AnyHttpUrl] = []
     API_KEY: str = "default-insecure-key"
+    MAX_UPLOAD_SIZE_BYTES: int = 100 * 1024 * 1024
 
     model_config = SettingsConfigDict(env_file=".env")
 
