@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, FormControlLabel, Radio, RadioGroup, Stack, Typography } from "@mui/material";
 
 import { usePipelineStore } from "../store/usePipelineStore";
+import { ModelType } from "../types";
 
 export default function ModelCard() {
   const model = usePipelineStore((s) => s.model);
@@ -10,7 +11,7 @@ export default function ModelCard() {
     <Card sx={{ height: "100%", minHeight: 320 }}>
       <CardHeader title="5. Choose Model" subheader="One model per run" />
       <CardContent>
-        <RadioGroup value={model || ""} onChange={(e) => setModel(e.target.value as any)}>
+        <RadioGroup value={model || ""} onChange={(e) => setModel(e.target.value as ModelType)}>
           <FormControlLabel
             value="logistic_regression"
             control={<Radio />}
