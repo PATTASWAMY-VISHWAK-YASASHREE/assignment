@@ -27,8 +27,9 @@ export default function UploadCard() {
       });
       reset();
       setDataset(data);
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || "Failed to upload file");
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setError(detail || "Failed to upload file");
     } finally {
       setLoading(false);
     }

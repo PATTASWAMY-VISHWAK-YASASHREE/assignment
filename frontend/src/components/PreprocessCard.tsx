@@ -68,7 +68,7 @@ export default function PreprocessCard() {
                   labelId="preprocess-type"
                   value={selectedStep}
                   label="Step"
-                  onChange={(e) => setSelectedStep(e.target.value as any)}
+                  onChange={(e) => setSelectedStep(e.target.value as typeof OPTIONS[number]["value"])}
                 >
                   {OPTIONS.map((opt) => (
                     <MenuItem key={opt.value} value={opt.value}>

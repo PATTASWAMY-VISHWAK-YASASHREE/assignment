@@ -38,11 +38,11 @@ export default function PlaygroundCard() {
       return;
     }
 
-    let records: Array<Record<string, unknown>> = [];
+    let records: Array<Record<string, unknown>>;
     try {
       const parsed = JSON.parse(rawInput);
       records = Array.isArray(parsed) ? parsed : [parsed];
-    } catch (err) {
+    } catch {
       setError("Invalid JSON. Provide one record or an array of records.");
       return;
     }
@@ -54,8 +54,9 @@ export default function PlaygroundCard() {
         records,
       });
       setPredictions(data.predictions);
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || "Prediction failed");
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setError(detail || "Prediction failed");
     } finally {
       setLoading(false);
     }
