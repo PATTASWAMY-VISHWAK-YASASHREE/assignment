@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from io import BytesIO
-from typing import Dict
+from typing import Dict, BinaryIO
 from threading import RLock
 from uuid import uuid4
 
@@ -19,13 +18,15 @@ _dataset_store: Dict[str, pd.DataFrame] = {}
 _dataset_lock = RLock()
 
 
-def _read_dataframe(filename: str, content: bytes) -> pd.DataFrame:
+def _read_dataframe(filename: str, file_obj: BinaryIO) -> pd.DataFrame:
     lowered = filename.lower()
     if lowered.endswith(".csv"):
-        return pd.read_csv(BytesIO(content))
+        return pd.read_csv(file_obj)
     if lowered.endswith(".xlsx") or lowered.endswith(".xls"):
-        return pd.read_excel(BytesIO(content))
-    raise ValueError("Unsupported file format. Please upload a .csv or .xlsx file.")
+        return pd.read_excel(file_obj)
+    raise ValueError(
+        "Unsupported file format. Please upload a .csv or .xlsx file."
+    )
 
 
 def get_dataset(dataset_id: str) -> pd.DataFrame:
@@ -36,29 +37,30 @@ def get_dataset(dataset_id: str) -> pd.DataFrame:
 
 
 async def save_dataset(file: UploadFile) -> DatasetUploadResponse:
-    # Check file size by reading in chunks to avoid memory exhaustion
-    # and to validate size before processing.
+    # Check file size by seeking to the end.
     MAX_SIZE = settings.MAX_UPLOAD_SIZE_BYTES
-    chunk_size = 1024 * 1024  # 1MB chunks
-    content = bytearray()
 
-    while True:
-        chunk = await file.read(chunk_size)
-        if not chunk:
-            break
-        content.extend(chunk)
-        if len(content) > MAX_SIZE:
-            raise ValueError(
-                f"Uploaded file exceeds the maximum allowed size of {MAX_SIZE} bytes."
-            )
+    # Seek to end to get size
+    file.file.seek(0, 2)
+    size = file.file.tell()
 
-    if not content:
+    if size > MAX_SIZE:
+        raise ValueError(
+            f"Uploaded file exceeds the maximum allowed size of "
+            f"{MAX_SIZE} bytes."
+        )
+
+    if size == 0:
         raise ValueError("Uploaded file is empty.")
+
+    # Reset file position
+    file.file.seek(0)
 
     filename = file.filename or ""
     loop = asyncio.get_running_loop()
     # Offload blocking IO/CPU task to a thread pool
-    df = await loop.run_in_executor(None, _read_dataframe, filename, content)
+    # Pass file.file directly to avoid reading into memory
+    df = await loop.run_in_executor(None, _read_dataframe, filename, file.file)
 
     if df.empty:
         raise ValueError("Dataset contains no rows.")
