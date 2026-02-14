@@ -1,0 +1,34 @@
+name: Octus Test Run
+on:
+  workflow_dispatch:
+    inputs:
+      suite_id:
+        description: 'Test Suite ID'
+        required: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install pytest
+
+      - name: Run tests
+        run: |
+          pytest octus_tests/ --tb=short -v --junitxml=results.xml 2>&1 | tee test_output.txt
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            results.xml
+            test_output.txt
