@@ -54,8 +54,9 @@ export default function RunPanel() {
 
       const { data } = await api.post<PipelineRunResponse>("/pipeline/run", payload);
       store.setResult(data);
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || "Pipeline failed");
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setError(detail || "Pipeline failed");
       store.setResult(undefined);
     } finally {
       store.setRunning(false);

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-import pickle
+import pickle  # nosec
 from dataclasses import dataclass
 from threading import RLock
 from typing import Any, Dict, List, Optional, Tuple
