@@ -45,7 +45,13 @@ export default function UploadCard() {
     setIsDragging(false);
     if (loading) return;
     const file = e.dataTransfer.files?.[0];
-    if (file) processFile(file);
+    if (file) {
+      if (!file.name.match(/\.(csv|xlsx)$/i)) {
+        setError("Invalid file type. Please upload CSV or Excel.");
+        return;
+      }
+      processFile(file);
+    }
   };
 
   return (
@@ -53,6 +59,8 @@ export default function UploadCard() {
       <CardHeader title="1. Upload Dataset" subheader="Upload CSV or Excel to get started" />
       <CardContent>
         <Box
+          role="region"
+          aria-label="File upload drop zone"
           onDragOver={(e) => {
             e.preventDefault();
             if (!loading) setIsDragging(true);
