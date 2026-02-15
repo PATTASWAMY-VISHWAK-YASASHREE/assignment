@@ -10,6 +10,8 @@ from app.schemas.pipeline import (
     ConfusionMatrix,
     ModelType,
     FeatureImportance,
+    PredictRequest,
+    PredictResponse,
 )
 
 
@@ -90,4 +92,42 @@ class TestPipelineRoute:
     def test_run_pipeline_invalid_model_enum_422(self, client, valid_request):
         bad = {**valid_request, "model": "not-a-model"}
         resp = client.post("/pipeline/run", json=bad)
+        assert resp.status_code == 422
+
+
+class TestPipelinePredictRoute:
+    @patch("app.api.routes.pipeline.pipeline_service.predict", new_callable=AsyncMock)
+    def test_predict_success(self, mock_predict, client):
+        payload = {"model_id": "model-123", "records": [{"f1": 1, "f2": 2}]}
+        expected_response = PredictResponse(predictions=[0])
+        mock_predict.return_value = expected_response
+
+        resp = client.post("/pipeline/predict", json=payload)
+
+        assert resp.status_code == 200
+        assert resp.json() == {"predictions": [0]}
+        mock_predict.assert_awaited_once_with("model-123", [{"f1": 1, "f2": 2}])
+
+    @patch("app.api.routes.pipeline.pipeline_service.predict", new_callable=AsyncMock)
+    def test_predict_value_error_returns_400(self, mock_predict, client):
+        payload = {"model_id": "model-123", "records": [{"f1": 1, "f2": 2}]}
+        mock_predict.side_effect = ValueError("Invalid input")
+
+        resp = client.post("/pipeline/predict", json=payload)
+
+        assert resp.status_code == 400
+        assert "Invalid input" in resp.json()["detail"]
+
+    @patch("app.api.routes.pipeline.pipeline_service.predict", new_callable=AsyncMock)
+    def test_predict_unexpected_returns_500(self, mock_predict, client):
+        payload = {"model_id": "model-123", "records": [{"f1": 1, "f2": 2}]}
+        mock_predict.side_effect = RuntimeError("Unexpected error")
+
+        resp = client.post("/pipeline/predict", json=payload)
+
+        assert resp.status_code == 500
+        assert "Prediction failed: Unexpected error" in resp.json()["detail"]
+
+    def test_predict_missing_body_422(self, client):
+        resp = client.post("/pipeline/predict")
         assert resp.status_code == 422
