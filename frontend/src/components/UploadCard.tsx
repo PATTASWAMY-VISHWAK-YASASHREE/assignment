@@ -7,6 +7,7 @@ import { DatasetUploadResponse } from "../types";
 import { usePipelineStore } from "../store/usePipelineStore";
 
 const ACCEPTED = ".csv,.xlsx";
+const MAX_SIZE_MB = 100;
 
 export default function UploadCard() {
   const setDataset = usePipelineStore((s) => s.setDataset);
@@ -14,16 +15,40 @@ export default function UploadCard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  const validateFile = (file: File): string | null => {
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      return `File exceeds ${MAX_SIZE_MB}MB limit.`;
+    }
+    if (!file.name.match(/\.(csv|xlsx)$/i)) {
+      return "Invalid format. Only .csv and .xlsx are supported.";
+    }
+    return null;
+  };
 
   const processFile = async (file: File) => {
     if (!file) return;
     setError(null);
+    setUploadProgress(0);
+
+    const validationError = validateFile(file);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setLoading(true);
     try {
       const formData = new FormData();
       formData.append("file", file);
       const { data } = await api.post<DatasetUploadResponse>("/datasets/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (progressEvent) => {
+          const total = progressEvent.total || progressEvent.loaded;
+          const percent = Math.round((progressEvent.loaded * 100) / total);
+          setUploadProgress(percent);
+        },
       });
       reset();
       setDataset(data);
@@ -31,6 +56,7 @@ export default function UploadCard() {
       setError(err?.response?.data?.detail || "Failed to upload file");
     } finally {
       setLoading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -89,10 +115,16 @@ export default function UploadCard() {
             </Typography>
           </Box>
           <Button component="label" variant="contained" disabled={loading}>
-            Select File
+            {loading ? `Uploading ${uploadProgress}%` : "Select File"}
             <input hidden type="file" accept={ACCEPTED} onChange={handleFile} />
           </Button>
-          {loading && <LinearProgress sx={{ width: "100%", maxWidth: 300, mt: 1 }} />}
+          {loading && (
+            <LinearProgress
+              variant="determinate"
+              value={uploadProgress}
+              sx={{ width: "100%", maxWidth: 300, mt: 1 }}
+            />
+          )}
           {error && (
             <Typography color="error" variant="body2">
               {error}
