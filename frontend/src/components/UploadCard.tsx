@@ -1,4 +1,4 @@
-import { ChangeEvent, DragEvent, useState } from "react";
+import { ChangeEvent, DragEvent, KeyboardEvent, useRef, useState } from "react";
 import { Box, Button, Card, CardContent, CardHeader, LinearProgress, Typography } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
@@ -14,6 +14,7 @@ export default function UploadCard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const processFile = async (file: File) => {
     if (!file) return;
@@ -48,6 +49,19 @@ export default function UploadCard() {
     if (file) processFile(file);
   };
 
+  const handleClick = () => {
+    if (!loading) {
+      inputRef.current?.click();
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if ((e.key === "Enter" || e.key === " ") && !loading) {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
   return (
     <Card sx={{ height: "100%", minHeight: 320 }}>
       <CardHeader title="1. Upload Dataset" subheader="Upload CSV or Excel to get started" />
@@ -63,6 +77,12 @@ export default function UploadCard() {
             }
           }}
           onDrop={onDrop}
+          onClick={handleClick}
+          onKeyDown={handleKeyDown}
+          role="button"
+          tabIndex={loading ? -1 : 0}
+          aria-label="Upload dataset dropzone"
+          aria-disabled={loading}
           sx={{
             border: "2px dashed",
             borderColor: isDragging ? "primary.main" : "divider",
@@ -70,11 +90,17 @@ export default function UploadCard() {
             p: 4,
             textAlign: "center",
             bgcolor: isDragging ? "action.hover" : "background.paper",
+            cursor: loading ? "default" : "pointer",
             transition: "all 0.2s",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             gap: 2,
+            "&:focus-visible": {
+              outline: "2px solid",
+              outlineColor: "primary.main",
+              outlineOffset: 2,
+            },
           }}
         >
           <CloudUploadIcon
@@ -85,13 +111,13 @@ export default function UploadCard() {
               {isDragging ? "Drop file now" : "Drag & drop file here"}
             </Typography>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              or click below to browse
+              or click anywhere to browse
             </Typography>
           </Box>
-          <Button component="label" variant="contained" disabled={loading}>
+          <Button component="div" variant="contained" disabled={loading} tabIndex={-1}>
             Select File
-            <input hidden type="file" accept={ACCEPTED} onChange={handleFile} />
           </Button>
+          <input ref={inputRef} hidden type="file" accept={ACCEPTED} onChange={handleFile} />
           {loading && <LinearProgress sx={{ width: "100%", maxWidth: 300, mt: 1 }} />}
           {error && (
             <Typography color="error" variant="body2">
