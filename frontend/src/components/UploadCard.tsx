@@ -1,4 +1,4 @@
-import { ChangeEvent, DragEvent, useState } from "react";
+import { ChangeEvent, DragEvent, useRef, useState } from "react";
 import { Box, Button, Card, CardContent, CardHeader, LinearProgress, Typography } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
@@ -14,6 +14,7 @@ export default function UploadCard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const processFile = async (file: File) => {
     if (!file) return;
@@ -63,6 +64,19 @@ export default function UploadCard() {
             }
           }}
           onDrop={onDrop}
+          onClick={() => {
+            if (!loading) inputRef.current?.click();
+          }}
+          onKeyDown={(e) => {
+            if (!loading && (e.key === "Enter" || e.key === " ")) {
+              e.preventDefault();
+              inputRef.current?.click();
+            }
+          }}
+          role="button"
+          tabIndex={loading ? -1 : 0}
+          aria-label="Upload dataset: Drag and drop or click to select"
+          aria-disabled={loading}
           sx={{
             border: "2px dashed",
             borderColor: isDragging ? "primary.main" : "divider",
@@ -75,6 +89,12 @@ export default function UploadCard() {
             flexDirection: "column",
             alignItems: "center",
             gap: 2,
+            cursor: loading ? "default" : "pointer",
+            "&:focus-visible": {
+              outline: "2px solid",
+              outlineColor: "primary.main",
+              outlineOffset: "2px",
+            },
           }}
         >
           <CloudUploadIcon
@@ -88,10 +108,23 @@ export default function UploadCard() {
               or click below to browse
             </Typography>
           </Box>
-          <Button component="label" variant="contained" disabled={loading}>
+          <Button
+            component="div"
+            variant="contained"
+            disabled={loading}
+            tabIndex={-1}
+            aria-hidden="true"
+            sx={{ pointerEvents: "none" }}
+          >
             Select File
-            <input hidden type="file" accept={ACCEPTED} onChange={handleFile} />
           </Button>
+          <input
+            ref={inputRef}
+            hidden
+            type="file"
+            accept={ACCEPTED}
+            onChange={handleFile}
+          />
           {loading && <LinearProgress sx={{ width: "100%", maxWidth: 300, mt: 1 }} />}
           {error && (
             <Typography color="error" variant="body2">
