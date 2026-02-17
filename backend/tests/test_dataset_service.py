@@ -1,5 +1,6 @@
 import asyncio
 from io import BytesIO
+from unittest.mock import AsyncMock, Mock
 
 import pandas as pd
 import pytest
@@ -74,3 +75,37 @@ async def test_concurrent_saves_generate_unique_ids(sample_csv_bytes):
     for res in results:
         retrieved = dataset_service.get_dataset(res.dataset_id)
         assert isinstance(retrieved, pd.DataFrame)
+
+
+@pytest.mark.asyncio
+async def test_save_dataset_avoids_memory_chunking():
+    # Helper to track calls
+    content = b"col1,col2\n1,2"
+    file_obj = BytesIO(content)
+
+    # Mock UploadFile
+    upload = UploadFile(filename="test.csv", file=file_obj)
+
+    # Mock read to spy on it
+    # We want to ensure it is NOT called (or at least not for the purpose of reading the whole file)
+    # The current implementation DOES call read, so we expect this to fail or we use it to verify the change
+    # For now, let's spy on it.
+    upload.read = AsyncMock()
+    # If read IS called, it means we are using the old method.
+    # We simulate read behavior if called (return chunk then empty)
+    upload.read.side_effect = [content, b""]
+
+    # Spy on seek
+    file_obj.seek = Mock(wraps=file_obj.seek)
+    file_obj.tell = Mock(wraps=file_obj.tell)
+
+    # Execute
+    await dataset_service.save_dataset(upload)
+
+    # Check optimization: read should NOT be called
+    assert not upload.read.called, "dataset_service should not read file into memory using read()"
+
+    # Check optimization: seek should be used to check size
+    file_obj.seek.assert_any_call(0, 2)
+    file_obj.seek.assert_any_call(0)
+    assert file_obj.tell.called
