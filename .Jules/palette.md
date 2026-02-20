@@ -5,3 +5,7 @@
 ## 2025-02-17 - Slider Accessibility
 **Learning:** Sliders without `aria-label` or `getAriaValueText` are inaccessible to screen reader users. Visual marks also help cognitive load.
 **Action:** Always include `aria-label`, `getAriaValueText`, and visual `marks` for critical sliders.
+
+## 2025-02-18 - File Upload State
+**Learning:** Persistent upload forms after success can confuse users about whether the action completed.
+**Action:** Replace form with a success summary state + "Replace" action to confirm completion and show key stats.
