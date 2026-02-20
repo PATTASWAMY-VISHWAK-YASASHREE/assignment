@@ -1,6 +1,7 @@
 import { ChangeEvent, DragEvent, useState } from "react";
 import { Box, Button, Card, CardContent, CardHeader, LinearProgress, Typography } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 import api from "../api";
 import { DatasetUploadResponse } from "../types";
@@ -9,6 +10,7 @@ import { usePipelineStore } from "../store/usePipelineStore";
 const ACCEPTED = ".csv,.xlsx";
 
 export default function UploadCard() {
+  const dataset = usePipelineStore((s) => s.dataset);
   const setDataset = usePipelineStore((s) => s.setDataset);
   const reset = usePipelineStore((s) => s.reset);
   const [loading, setLoading] = useState(false);
@@ -52,56 +54,82 @@ export default function UploadCard() {
     <Card sx={{ height: "100%", minHeight: 320 }}>
       <CardHeader title="1. Upload Dataset" subheader="Upload CSV or Excel to get started" />
       <CardContent>
-        <Box
-          onDragOver={(e) => {
-            e.preventDefault();
-            if (!loading) setIsDragging(true);
-          }}
-          onDragLeave={(e) => {
-            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-              setIsDragging(false);
-            }
-          }}
-          onDrop={onDrop}
-          sx={{
-            border: "2px dashed",
-            borderColor: isDragging ? "primary.main" : "divider",
-            borderRadius: 2,
-            p: 4,
-            textAlign: "center",
-            bgcolor: isDragging ? "action.hover" : "background.paper",
-            transition: "all 0.2s",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 2,
-          }}
-        >
-          <CloudUploadIcon
-            sx={{ fontSize: 48, color: isDragging ? "primary.main" : "text.secondary", opacity: 0.5 }}
-          />
-          <Box>
-            <Typography variant="body1" gutterBottom fontWeight={500}>
-              {isDragging ? "Drop file now" : "Drag & drop file here"}
+        {dataset ? (
+          <Box
+            sx={{
+              p: 4,
+              textAlign: "center",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 2,
+              height: "100%",
+              justifyContent: "center",
+            }}
+          >
+            <CheckCircleIcon color="success" sx={{ fontSize: 48 }} />
+            <Typography variant="h6" gutterBottom>
+              Dataset Uploaded!
             </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              or click below to browse
+            <Typography variant="body2" color="text.secondary">
+              {dataset.rows.toLocaleString()} rows • {dataset.columns} columns
+            </Typography>
+            <Button variant="outlined" onClick={reset} sx={{ mt: 2 }}>
+              Replace Dataset
+            </Button>
+          </Box>
+        ) : (
+          <Box
+            onDragOver={(e) => {
+              e.preventDefault();
+              if (!loading) setIsDragging(true);
+            }}
+            onDragLeave={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                setIsDragging(false);
+              }
+            }}
+            onDrop={onDrop}
+            sx={{
+              border: "2px dashed",
+              borderColor: isDragging ? "primary.main" : "divider",
+              borderRadius: 2,
+              p: 4,
+              textAlign: "center",
+              bgcolor: isDragging ? "action.hover" : "background.paper",
+              transition: "all 0.2s",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 2,
+            }}
+          >
+            <CloudUploadIcon
+              sx={{ fontSize: 48, color: isDragging ? "primary.main" : "text.secondary", opacity: 0.5 }}
+            />
+            <Box>
+              <Typography variant="body1" gutterBottom fontWeight={500}>
+                {isDragging ? "Drop file now" : "Drag & drop file here"}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                or click below to browse
+              </Typography>
+            </Box>
+            <Button component="label" variant="contained" disabled={loading}>
+              Select File
+              <input hidden type="file" accept={ACCEPTED} onChange={handleFile} />
+            </Button>
+            {loading && <LinearProgress sx={{ width: "100%", maxWidth: 300, mt: 1 }} />}
+            {error && (
+              <Typography color="error" variant="body2">
+                {error}
+              </Typography>
+            )}
+            <Typography variant="caption" color="text.secondary" display="block">
+              Accepted: {ACCEPTED}
             </Typography>
           </Box>
-          <Button component="label" variant="contained" disabled={loading}>
-            Select File
-            <input hidden type="file" accept={ACCEPTED} onChange={handleFile} />
-          </Button>
-          {loading && <LinearProgress sx={{ width: "100%", maxWidth: 300, mt: 1 }} />}
-          {error && (
-            <Typography color="error" variant="body2">
-              {error}
-            </Typography>
-          )}
-          <Typography variant="caption" color="text.secondary" display="block">
-            Accepted: {ACCEPTED}
-          </Typography>
-        </Box>
+        )}
       </CardContent>
     </Card>
   );
