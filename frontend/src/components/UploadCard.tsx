@@ -1,5 +1,5 @@
 import { ChangeEvent, DragEvent, useState } from "react";
-import { Box, Button, Card, CardContent, CardHeader, LinearProgress, Typography } from "@mui/material";
+import { Alert, Box, Button, Card, CardContent, CardHeader, LinearProgress, Typography } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 import api from "../api";
@@ -78,6 +78,7 @@ export default function UploadCard() {
           }}
         >
           <CloudUploadIcon
+            aria-hidden="true"
             sx={{ fontSize: 48, color: isDragging ? "primary.main" : "text.secondary", opacity: 0.5 }}
           />
           <Box>
@@ -92,11 +93,16 @@ export default function UploadCard() {
             Select File
             <input hidden type="file" accept={ACCEPTED} onChange={handleFile} />
           </Button>
-          {loading && <LinearProgress sx={{ width: "100%", maxWidth: 300, mt: 1 }} />}
+          {loading && (
+            <LinearProgress
+              aria-label="File upload in progress"
+              sx={{ width: "100%", maxWidth: 300, mt: 1 }}
+            />
+          )}
           {error && (
-            <Typography color="error" variant="body2">
+            <Alert severity="error" sx={{ width: "100%", maxWidth: 300 }}>
               {error}
-            </Typography>
+            </Alert>
           )}
           <Typography variant="caption" color="text.secondary" display="block">
             Accepted: {ACCEPTED}
