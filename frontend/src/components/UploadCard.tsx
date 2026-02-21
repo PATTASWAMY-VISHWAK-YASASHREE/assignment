@@ -1,4 +1,4 @@
-import { ChangeEvent, DragEvent, useState } from "react";
+import { ChangeEvent, DragEvent, useState, useRef, KeyboardEvent } from "react";
 import { Box, Button, Card, CardContent, CardHeader, LinearProgress, Typography } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
@@ -14,6 +14,7 @@ export default function UploadCard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const processFile = async (file: File) => {
     if (!file) return;
@@ -48,11 +49,20 @@ export default function UploadCard() {
     if (file) processFile(file);
   };
 
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      inputRef.current?.click();
+    }
+  };
+
   return (
     <Card sx={{ height: "100%", minHeight: 320 }}>
       <CardHeader title="1. Upload Dataset" subheader="Upload CSV or Excel to get started" />
       <CardContent>
         <Box
+          component="label"
+          htmlFor="file-upload"
           onDragOver={(e) => {
             e.preventDefault();
             if (!loading) setIsDragging(true);
@@ -63,6 +73,10 @@ export default function UploadCard() {
             }
           }}
           onDrop={onDrop}
+          tabIndex={0}
+          role="button"
+          aria-label="File upload dropzone. Drag and drop a file here or press Enter to select."
+          onKeyDown={handleKeyDown}
           sx={{
             border: "2px dashed",
             borderColor: isDragging ? "primary.main" : "divider",
@@ -75,10 +89,25 @@ export default function UploadCard() {
             flexDirection: "column",
             alignItems: "center",
             gap: 2,
+            cursor: "pointer",
+            "&:focus-visible": {
+              outline: "2px solid",
+              outlineColor: "primary.main",
+              outlineOffset: 2,
+            },
           }}
         >
+          <input
+            hidden
+            id="file-upload"
+            type="file"
+            accept={ACCEPTED}
+            onChange={handleFile}
+            ref={inputRef}
+          />
           <CloudUploadIcon
             sx={{ fontSize: 48, color: isDragging ? "primary.main" : "text.secondary", opacity: 0.5 }}
+            aria-hidden="true"
           />
           <Box>
             <Typography variant="body1" gutterBottom fontWeight={500}>
@@ -88,13 +117,19 @@ export default function UploadCard() {
               or click below to browse
             </Typography>
           </Box>
-          <Button component="label" variant="contained" disabled={loading}>
+          <Button
+            component="div"
+            variant="contained"
+            disabled={loading}
+            tabIndex={-1}
+            role="presentation"
+            sx={{ pointerEvents: "none" }} // Ensure clicks pass through to label
+          >
             Select File
-            <input hidden type="file" accept={ACCEPTED} onChange={handleFile} />
           </Button>
           {loading && <LinearProgress sx={{ width: "100%", maxWidth: 300, mt: 1 }} />}
           {error && (
-            <Typography color="error" variant="body2">
+            <Typography color="error" variant="body2" role="alert">
               {error}
             </Typography>
           )}
