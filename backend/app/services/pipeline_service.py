@@ -268,12 +268,18 @@ def _filter_rare_classes(
     drop_rare: bool,
     warnings: List[str]
 ) -> Tuple[pd.DataFrame, Any, bool]:
-    unique, counts = np.unique(target, return_counts=True)
-    rare = {cls: int(cnt) for cls, cnt in zip(unique, counts) if cnt < 2}
+    # Use value_counts which is faster than np.unique
+    if isinstance(target, pd.Series):
+        s_target = target
+    else:
+        s_target = pd.Series(target)
+
+    vc = s_target.value_counts()
+    rare = vc[vc < 2].to_dict()
 
     if rare:
         if drop_rare:
-            mask = ~pd.Series(target).isin(list(rare.keys()))
+            mask = ~s_target.isin(list(rare.keys()))
             mask_values = mask.values
 
             df_features = df_features.loc[mask_values].reset_index(drop=True)
@@ -283,8 +289,12 @@ def _filter_rare_classes(
                 "Dropped classes with <2 samples: " + ", ".join(str(k) for k in rare.keys())
             )
             # re-check after drop
-            unique, counts = np.unique(target, return_counts=True)
-            if len(unique) < 2:
+            if isinstance(target, pd.Series):
+                n_unique = target.nunique()
+            else:
+                n_unique = len(np.unique(target))
+
+            if n_unique < 2:
                 warnings.append(
                     "Insufficient classes after dropping rare classes; skipping model training."
                 )
