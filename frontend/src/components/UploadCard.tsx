@@ -14,6 +14,7 @@ export default function UploadCard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   const processFile = async (file: File) => {
     if (!file) return;
@@ -53,6 +54,7 @@ export default function UploadCard() {
       <CardHeader title="1. Upload Dataset" subheader="Upload CSV or Excel to get started" />
       <CardContent>
         <Box
+          component="label"
           onDragOver={(e) => {
             e.preventDefault();
             if (!loading) setIsDragging(true);
@@ -65,36 +67,67 @@ export default function UploadCard() {
           onDrop={onDrop}
           sx={{
             border: "2px dashed",
-            borderColor: isDragging ? "primary.main" : "divider",
+            borderColor: isDragging || isFocused ? "primary.main" : "divider",
             borderRadius: 2,
             p: 4,
             textAlign: "center",
-            bgcolor: isDragging ? "action.hover" : "background.paper",
+            bgcolor: isDragging || isFocused ? "action.hover" : "background.paper",
             transition: "all 0.2s",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             gap: 2,
+            cursor: loading ? "default" : "pointer",
+            position: "relative",
+            "&:hover": {
+              borderColor: !loading ? "primary.main" : "divider",
+              bgcolor: !loading ? "action.hover" : undefined,
+            },
           }}
         >
+          <input
+            type="file"
+            accept={ACCEPTED}
+            onChange={handleFile}
+            disabled={loading}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            style={{
+              opacity: 0,
+              width: 1,
+              height: 1,
+              position: "absolute",
+              overflow: "hidden",
+              zIndex: -1,
+            }}
+          />
           <CloudUploadIcon
-            sx={{ fontSize: 48, color: isDragging ? "primary.main" : "text.secondary", opacity: 0.5 }}
+            sx={{
+              fontSize: 48,
+              color: isDragging || isFocused ? "primary.main" : "text.secondary",
+              opacity: 0.5,
+            }}
           />
           <Box>
             <Typography variant="body1" gutterBottom fontWeight={500}>
               {isDragging ? "Drop file now" : "Drag & drop file here"}
             </Typography>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              or click below to browse
+              or click to browse
             </Typography>
           </Box>
-          <Button component="label" variant="contained" disabled={loading}>
+          <Button
+            component="span"
+            variant="contained"
+            disabled={loading}
+            sx={{ pointerEvents: "none" }} // Ensure clicks pass through to the label
+            tabIndex={-1} // Ensure button itself is not focusable
+          >
             Select File
-            <input hidden type="file" accept={ACCEPTED} onChange={handleFile} />
           </Button>
           {loading && <LinearProgress sx={{ width: "100%", maxWidth: 300, mt: 1 }} />}
           {error && (
-            <Typography color="error" variant="body2">
+            <Typography color="error" variant="body2" role="alert">
               {error}
             </Typography>
           )}
