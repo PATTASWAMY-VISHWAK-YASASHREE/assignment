@@ -1,5 +1,5 @@
-import { ChangeEvent, DragEvent, useState } from "react";
-import { Box, Button, Card, CardContent, CardHeader, LinearProgress, Typography } from "@mui/material";
+import { ChangeEvent, DragEvent, useRef, useState } from "react";
+import { Alert, Box, Button, Card, CardContent, CardHeader, LinearProgress, Typography } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 import api from "../api";
@@ -13,11 +13,14 @@ export default function UploadCard() {
   const reset = usePipelineStore((s) => s.reset);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const processFile = async (file: File) => {
     if (!file) return;
     setError(null);
+    setSuccess(false);
     setLoading(true);
     try {
       const formData = new FormData();
@@ -27,6 +30,8 @@ export default function UploadCard() {
       });
       reset();
       setDataset(data);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
       setError(err?.response?.data?.detail || "Failed to upload file");
     } finally {
@@ -63,6 +68,18 @@ export default function UploadCard() {
             }
           }}
           onDrop={onDrop}
+          onClick={() => {
+            if (!loading) fileInputRef.current?.click();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              if (!loading) fileInputRef.current?.click();
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="Upload file area. Drag and drop a CSV or Excel file here, or click to select."
           sx={{
             border: "2px dashed",
             borderColor: isDragging ? "primary.main" : "divider",
@@ -75,6 +92,12 @@ export default function UploadCard() {
             flexDirection: "column",
             alignItems: "center",
             gap: 2,
+            cursor: "pointer",
+            "&:focus-visible": {
+              outline: "2px solid",
+              outlineColor: "primary.main",
+              outlineOffset: "2px",
+            },
           }}
         >
           <CloudUploadIcon
@@ -88,16 +111,46 @@ export default function UploadCard() {
               or click below to browse
             </Typography>
           </Box>
-          <Button component="label" variant="contained" disabled={loading}>
+
+          <Button
+            component="div"
+            role="presentation"
+            tabIndex={-1}
+            variant="contained"
+            disabled={loading}
+            sx={{ pointerEvents: "none" }}
+          >
             Select File
-            <input hidden type="file" accept={ACCEPTED} onChange={handleFile} />
           </Button>
-          {loading && <LinearProgress sx={{ width: "100%", maxWidth: 300, mt: 1 }} />}
-          {error && (
-            <Typography color="error" variant="body2">
-              {error}
-            </Typography>
-          )}
+          <input
+            ref={fileInputRef}
+            hidden
+            type="file"
+            accept={ACCEPTED}
+            onChange={handleFile}
+          />
+
+          <Box width="100%" maxWidth={300} aria-live="polite">
+            {loading && (
+              <Box aria-busy="true" mb={1}>
+                <Typography variant="caption" display="block" gutterBottom>
+                  Uploading...
+                </Typography>
+                <LinearProgress sx={{ width: "100%" }} />
+              </Box>
+            )}
+            {error && (
+              <Alert severity="error" sx={{ width: "100%", mt: 1 }}>
+                {error}
+              </Alert>
+            )}
+            {success && (
+              <Alert severity="success" sx={{ width: "100%", mt: 1 }}>
+                File uploaded successfully!
+              </Alert>
+            )}
+          </Box>
+
           <Typography variant="caption" color="text.secondary" display="block">
             Accepted: {ACCEPTED}
           </Typography>
