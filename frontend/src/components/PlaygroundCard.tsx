@@ -27,7 +27,19 @@ export default function PlaygroundCard() {
   const [rawInput, setRawInput] = useState(sampleInput);
   const [predictions, setPredictions] = useState<Array<string | number>>([]);
   const [error, setError] = useState<string | null>(null);
+  const [jsonError, setJsonError] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const validateJson = () => {
+    try {
+      JSON.parse(rawInput);
+      setJsonError(false);
+      return true;
+    } catch {
+      setJsonError(true);
+      return false;
+    }
+  };
 
   const onPredict = async () => {
     setError(null);
@@ -38,12 +50,15 @@ export default function PlaygroundCard() {
       return;
     }
 
+    if (!validateJson()) return;
+
     let records: Array<Record<string, unknown>> = [];
     try {
       const parsed = JSON.parse(rawInput);
       records = Array.isArray(parsed) ? parsed : [parsed];
     } catch (err) {
-      setError("Invalid JSON. Provide one record or an array of records.");
+      // Should be caught by validateJson, but just in case
+      setJsonError(true);
       return;
     }
 
@@ -73,11 +88,20 @@ export default function PlaygroundCard() {
           <TextField
             label="JSON input"
             value={rawInput}
-            onChange={(e) => setRawInput(e.target.value)}
+            onChange={(e) => {
+              setRawInput(e.target.value);
+              setJsonError(false);
+            }}
+            onBlur={() => validateJson()}
+            error={jsonError}
             minRows={6}
             multiline
             fullWidth
-            helperText="Provide either a single JSON object or an array of objects with the selected feature columns."
+            helperText={
+              jsonError
+                ? "Invalid JSON format"
+                : "Provide either a single JSON object or an array of objects with the selected feature columns."
+            }
           />
 
           <Box display="flex" gap={2} alignItems="center">
@@ -90,9 +114,11 @@ export default function PlaygroundCard() {
               {loading ? "Predicting..." : "Send to model"}
             </Button>
             {predictions.length > 0 && (
-              <Typography color="secondary" fontWeight={600}>
-                Predictions: {predictions.map((p) => String(p)).join(", ")}
-              </Typography>
+              <Box role="status" aria-live="polite">
+                <Typography component="pre" color="secondary" fontWeight={600} sx={{ m: 0 }}>
+                  Predictions: {predictions.map((p) => String(p)).join(", ")}
+                </Typography>
+              </Box>
             )}
           </Box>
 
