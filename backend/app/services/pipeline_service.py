@@ -268,12 +268,23 @@ def _filter_rare_classes(
     drop_rare: bool,
     warnings: List[str]
 ) -> Tuple[pd.DataFrame, Any, bool]:
-    unique, counts = np.unique(target, return_counts=True)
-    rare = {cls: int(cnt) for cls, cnt in zip(unique, counts) if cnt < 2}
+    # Optimization: Use value_counts(sort=False) which is faster than np.unique
+    if not isinstance(target, pd.Series):
+        target_s = pd.Series(target)
+    else:
+        target_s = target
 
-    if rare:
+    counts_s = target_s.value_counts(sort=False, dropna=False)
+    rare_counts = counts_s[counts_s < 2]
+
+    if not rare_counts.empty:
+        # Convert to dict for easier access. Keys are class labels, values are counts.
+        # Note: value_counts(sort=False) order is not guaranteed, so we sort keys for deterministic output.
+        rare_keys = sorted(rare_counts.index.tolist())
+        rare = {cls: int(rare_counts[cls]) for cls in rare_keys}
+
         if drop_rare:
-            mask = ~pd.Series(target).isin(list(rare.keys()))
+            mask = ~target_s.isin(rare_keys)
             mask_values = mask.values
 
             df_features = df_features.loc[mask_values].reset_index(drop=True)
@@ -283,14 +294,20 @@ def _filter_rare_classes(
                 "Dropped classes with <2 samples: " + ", ".join(str(k) for k in rare.keys())
             )
             # re-check after drop
-            unique, counts = np.unique(target, return_counts=True)
-            if len(unique) < 2:
+            # Use nunique() on the filtered target (if it's a Series/ndarray)
+            # target is already sliced, so we can wrap it again or use nunique if Series
+            if not isinstance(target, pd.Series):
+                unique_count = len(np.unique(target))
+            else:
+                unique_count = target.nunique(dropna=False)
+
+            if unique_count < 2:
                 warnings.append(
                     "Insufficient classes after dropping rare classes; skipping model training."
                 )
                 return df_features, target, True
         else:
-            cls_list = ", ".join([f"{cls} ({cnt})" for cls, cnt in rare.items()])
+            cls_list = ", ".join([f"{cls} ({rare[cls]})" for cls in rare.keys()])
             raise ValueError(
                 "The least populated classes have fewer than 2 samples. "
                 f"Classes with too few members: {cls_list}. Enable drop_rare_classes to filter them."
