@@ -27,7 +27,19 @@ export default function PlaygroundCard() {
   const [rawInput, setRawInput] = useState(sampleInput);
   const [predictions, setPredictions] = useState<Array<string | number>>([]);
   const [error, setError] = useState<string | null>(null);
+  const [jsonError, setJsonError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const validateJson = () => {
+    try {
+      JSON.parse(rawInput);
+      setJsonError(null);
+      return true;
+    } catch (err) {
+      setJsonError("Invalid JSON format.");
+      return false;
+    }
+  };
 
   const onPredict = async () => {
     setError(null);
@@ -37,6 +49,8 @@ export default function PlaygroundCard() {
       setError("Run a pipeline first to produce a model.");
       return;
     }
+
+    if (!validateJson()) return;
 
     let records: Array<Record<string, unknown>> = [];
     try {
@@ -73,11 +87,20 @@ export default function PlaygroundCard() {
           <TextField
             label="JSON input"
             value={rawInput}
-            onChange={(e) => setRawInput(e.target.value)}
+            onChange={(e) => {
+              setRawInput(e.target.value);
+              if (jsonError) setJsonError(null);
+            }}
+            onBlur={() => validateJson()}
+            error={!!jsonError}
             minRows={6}
             multiline
             fullWidth
-            helperText="Provide either a single JSON object or an array of objects with the selected feature columns."
+            helperText={
+              jsonError ||
+              "Provide either a single JSON object or an array of objects with the selected feature columns."
+            }
+            sx={{ "& .MuiInputBase-input": { fontFamily: "monospace" } }}
           />
 
           <Box display="flex" gap={2} alignItems="center">
@@ -90,9 +113,11 @@ export default function PlaygroundCard() {
               {loading ? "Predicting..." : "Send to model"}
             </Button>
             {predictions.length > 0 && (
-              <Typography color="secondary" fontWeight={600}>
-                Predictions: {predictions.map((p) => String(p)).join(", ")}
-              </Typography>
+              <Box role="status" aria-live="polite">
+                <Typography color="secondary" fontWeight={600}>
+                  Predictions: {predictions.map((p) => String(p)).join(", ")}
+                </Typography>
+              </Box>
             )}
           </Box>
 
