@@ -5,3 +5,7 @@
 ## 2025-02-17 - Slider Accessibility
 **Learning:** Sliders without `aria-label` or `getAriaValueText` are inaccessible to screen reader users. Visual marks also help cognitive load.
 **Action:** Always include `aria-label`, `getAriaValueText`, and visual `marks` for critical sliders.
+
+## 2025-02-18 - Immediate Technical Input Feedback
+**Learning:** Users editing raw JSON in text fields need immediate syntax validation on blur, rather than waiting for API submission errors.
+**Action:** Use `onBlur` handlers to parse and validate technical formats (JSON/YAML) and display specific syntax errors inline.
