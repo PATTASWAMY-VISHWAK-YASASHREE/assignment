@@ -51,7 +51,7 @@ async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
 
 
 def _run_pipeline_sync(request: PipelineRunRequest) -> PipelineRunResponse:
-    df = dataset_service.get_dataset(request.dataset_id)
+    # df = dataset_service.get_dataset(request.dataset_id)  # Removed unused variable
     warnings: List[str] = []
 
     # 1. Prepare Data
@@ -268,8 +268,14 @@ def _filter_rare_classes(
     drop_rare: bool,
     warnings: List[str]
 ) -> Tuple[pd.DataFrame, Any, bool]:
-    unique, counts = np.unique(target, return_counts=True)
-    rare = {cls: int(cnt) for cls, cnt in zip(unique, counts) if cnt < 2}
+    # Optimization: Use pandas value_counts instead of np.unique for speedup
+    if isinstance(target, pd.Series):
+        vc = target.value_counts(sort=False, dropna=False)
+    else:
+        vc = pd.Series(target).value_counts(sort=False, dropna=False)
+
+    rare_vc = vc[vc < 2]
+    rare = rare_vc.to_dict()
 
     if rare:
         if drop_rare:
@@ -280,17 +286,16 @@ def _filter_rare_classes(
             target = target[mask_values]
 
             warnings.append(
-                "Dropped classes with <2 samples: " + ", ".join(str(k) for k in rare.keys())
+                "Dropped classes with <2 samples: " + ", ".join(str(k) for k in sorted(rare.keys()))
             )
             # re-check after drop
-            unique, counts = np.unique(target, return_counts=True)
-            if len(unique) < 2:
+            if len(pd.unique(target)) < 2:
                 warnings.append(
                     "Insufficient classes after dropping rare classes; skipping model training."
                 )
                 return df_features, target, True
         else:
-            cls_list = ", ".join([f"{cls} ({cnt})" for cls, cnt in rare.items()])
+            cls_list = ", ".join([f"{cls} ({cnt})" for cls, cnt in sorted(rare.items())])
             raise ValueError(
                 "The least populated classes have fewer than 2 samples. "
                 f"Classes with too few members: {cls_list}. Enable drop_rare_classes to filter them."
