@@ -133,3 +133,28 @@ def test_run_pipeline_rare_classes_error_without_drop(sample_dataframe):
 
     with pytest.raises(ValueError, match="least populated classes"):
         asyncio.run(pipeline_service.run_pipeline(request))
+
+
+def test_run_pipeline_categorical_target():
+    # Setup dataframe with categorical target
+    df = pd.DataFrame({
+        "feature1": [1, 2, 3, 4, 5, 6],
+        "target": ["class_a", "class_b", "class_a", "class_b", "class_a", "class_b"]
+    })
+    dataset_id = _store_dataset(df)
+
+    request = PipelineRunRequest(
+        dataset_id=dataset_id,
+        target_column="target",
+        feature_columns=["feature1"],
+        preprocess=[],
+        split=TrainTestConfig(test_size=0.5, random_state=1),
+        model=ModelType.logistic_regression,
+    )
+
+    response = asyncio.run(pipeline_service.run_pipeline(request))
+
+    assert response.status == "success"
+    assert response.model_type == ModelType.logistic_regression
+    assert len(response.confusion_matrix.labels) == 2
+    assert set(response.confusion_matrix.labels) == {"class_a", "class_b"}
