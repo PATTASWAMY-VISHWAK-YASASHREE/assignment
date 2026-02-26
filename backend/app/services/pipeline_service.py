@@ -268,29 +268,37 @@ def _filter_rare_classes(
     drop_rare: bool,
     warnings: List[str]
 ) -> Tuple[pd.DataFrame, Any, bool]:
-    unique, counts = np.unique(target, return_counts=True)
-    rare = {cls: int(cnt) for cls, cnt in zip(unique, counts) if cnt < 2}
+    # Ensure target is a Series for efficient value counting
+    if not isinstance(target, pd.Series):
+        target = pd.Series(target)
+
+    # Use value_counts instead of np.unique for better performance with categorical data
+    vc = target.value_counts(sort=False, dropna=False)
+    rare = vc[vc < 2].to_dict()
 
     if rare:
         if drop_rare:
-            mask = ~pd.Series(target).isin(list(rare.keys()))
+            mask = ~target.isin(list(rare.keys()))
             mask_values = mask.values
 
             df_features = df_features.loc[mask_values].reset_index(drop=True)
-            target = target[mask_values]
+            target = target[mask_values].reset_index(drop=True)
 
+            # Sort keys for deterministic output
+            sorted_keys = sorted(rare.keys())
             warnings.append(
-                "Dropped classes with <2 samples: " + ", ".join(str(k) for k in rare.keys())
+                "Dropped classes with <2 samples: " + ", ".join(str(k) for k in sorted_keys)
             )
             # re-check after drop
-            unique, counts = np.unique(target, return_counts=True)
-            if len(unique) < 2:
+            if target.nunique() < 2:
                 warnings.append(
                     "Insufficient classes after dropping rare classes; skipping model training."
                 )
                 return df_features, target, True
         else:
-            cls_list = ", ".join([f"{cls} ({cnt})" for cls, cnt in rare.items()])
+            # Sort keys for deterministic output
+            sorted_items = sorted(rare.items(), key=lambda x: x[0])
+            cls_list = ", ".join([f"{cls} ({cnt})" for cls, cnt in sorted_items])
             raise ValueError(
                 "The least populated classes have fewer than 2 samples. "
                 f"Classes with too few members: {cls_list}. Enable drop_rare_classes to filter them."
