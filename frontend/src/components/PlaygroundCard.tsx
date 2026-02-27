@@ -12,6 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
+import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 
 import api from "../api";
 import { PredictResponse } from "../types";
@@ -27,10 +28,22 @@ export default function PlaygroundCard() {
   const [rawInput, setRawInput] = useState(sampleInput);
   const [predictions, setPredictions] = useState<Array<string | number>>([]);
   const [error, setError] = useState<string | null>(null);
+  const [jsonError, setJsonError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const handleFormat = () => {
+    try {
+      const parsed = JSON.parse(rawInput);
+      setRawInput(JSON.stringify(parsed, null, 2));
+      setJsonError(null);
+    } catch {
+      setJsonError("Invalid JSON: Cannot format");
+    }
+  };
 
   const onPredict = async () => {
     setError(null);
+    setJsonError(null);
     setPredictions([]);
 
     if (!store.result?.model_id) {
@@ -43,7 +56,7 @@ export default function PlaygroundCard() {
       const parsed = JSON.parse(rawInput);
       records = Array.isArray(parsed) ? parsed : [parsed];
     } catch (err) {
-      setError("Invalid JSON. Provide one record or an array of records.");
+      setJsonError("Invalid JSON. Provide one record or an array of records.");
       return;
     }
 
@@ -73,14 +86,30 @@ export default function PlaygroundCard() {
           <TextField
             label="JSON input"
             value={rawInput}
-            onChange={(e) => setRawInput(e.target.value)}
+            onChange={(e) => {
+              setRawInput(e.target.value);
+              if (jsonError) setJsonError(null);
+            }}
+            slotProps={{ input: { sx: { fontFamily: "monospace" } } }}
             minRows={6}
             multiline
             fullWidth
-            helperText="Provide either a single JSON object or an array of objects with the selected feature columns."
+            error={!!jsonError}
+            helperText={
+              jsonError ||
+              "Provide either a single JSON object or an array of objects with the selected feature columns."
+            }
           />
 
           <Box display="flex" gap={2} alignItems="center">
+            <Button
+              variant="outlined"
+              startIcon={<AutoFixHighIcon />}
+              onClick={handleFormat}
+              disabled={loading}
+            >
+              Format
+            </Button>
             <Button
               variant="contained"
               startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <SmartToyIcon />}
