@@ -12,6 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
+import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 
 import api from "../api";
 import { PredictResponse } from "../types";
@@ -27,10 +28,22 @@ export default function PlaygroundCard() {
   const [rawInput, setRawInput] = useState(sampleInput);
   const [predictions, setPredictions] = useState<Array<string | number>>([]);
   const [error, setError] = useState<string | null>(null);
+  const [jsonError, setJsonError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const handleFormat = () => {
+    try {
+      const parsed = JSON.parse(rawInput);
+      setRawInput(JSON.stringify(parsed, null, 2));
+      setJsonError(null);
+    } catch (err) {
+      setJsonError("Invalid JSON syntax");
+    }
+  };
 
   const onPredict = async () => {
     setError(null);
+    setJsonError(null);
     setPredictions([]);
 
     if (!store.result?.model_id) {
@@ -73,14 +86,31 @@ export default function PlaygroundCard() {
           <TextField
             label="JSON input"
             value={rawInput}
-            onChange={(e) => setRawInput(e.target.value)}
+            onChange={(e) => {
+              setRawInput(e.target.value);
+              setJsonError(null);
+            }}
+            slotProps={{ input: { style: { fontFamily: "monospace" } } }}
             minRows={6}
             multiline
             fullWidth
-            helperText="Provide either a single JSON object or an array of objects with the selected feature columns."
+            error={!!jsonError}
+            helperText={
+              jsonError ||
+              "Provide either a single JSON object or an array of objects with the selected feature columns."
+            }
           />
 
           <Box display="flex" gap={2} alignItems="center">
+            <Button
+              variant="outlined"
+              startIcon={<AutoFixHighIcon />}
+              onClick={handleFormat}
+              disabled={loading || !rawInput.trim()}
+              aria-label="Format JSON"
+            >
+              Format
+            </Button>
             <Button
               variant="contained"
               startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <SmartToyIcon />}
@@ -90,9 +120,11 @@ export default function PlaygroundCard() {
               {loading ? "Predicting..." : "Send to model"}
             </Button>
             {predictions.length > 0 && (
-              <Typography color="secondary" fontWeight={600}>
-                Predictions: {predictions.map((p) => String(p)).join(", ")}
-              </Typography>
+              <Box role="status" aria-live="polite">
+                <Typography color="secondary" fontWeight={600}>
+                  Predictions: {predictions.map((p) => String(p)).join(", ")}
+                </Typography>
+              </Box>
             )}
           </Box>
 
