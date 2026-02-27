@@ -273,8 +273,7 @@ def _filter_rare_classes(
 
     if rare:
         if drop_rare:
-            mask = ~pd.Series(target).isin(list(rare.keys()))
-            mask_values = mask.values
+            mask_values = ~np.isin(target, list(rare.keys()))
 
             df_features = df_features.loc[mask_values].reset_index(drop=True)
             target = target[mask_values]
