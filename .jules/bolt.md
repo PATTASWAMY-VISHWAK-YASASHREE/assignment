@@ -1,3 +1,3 @@
-## 2024-05-23 - Missing Config Blocking Test
-**Learning:** The `dataset_service.py` relied on `settings.MAX_UPLOAD_SIZE_BYTES` which was missing from `backend/app/core/config.py`. This prevented even basic file uploads from working, blocking reproduction of other issues.
-**Action:** Always verify basic configuration consistency when encountering seemingly unrelated errors (like "Settings object has no attribute").
+## 2024-05-24 - Dataset Upload Memory Optimization
+**Learning:** Initial implementation of `save_dataset` read the entire file into a `bytearray` to check size, effectively doubling memory usage. Starlette's `UploadFile.file` is a `SpooledTemporaryFile` that can be passed directly to Pandas.
+**Action:** When handling large file uploads, always prefer seeking the file object for size checks and streaming directly to consumers (like Pandas or S3) to avoid O(N) memory overhead.
