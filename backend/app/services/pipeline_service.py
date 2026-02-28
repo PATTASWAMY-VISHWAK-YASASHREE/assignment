@@ -200,10 +200,16 @@ def _impute_values(
     numeric_fill: Dict[str, Any] = {}
     categorical_fill: Dict[str, Any] = {}
 
+    # Bolt Optimization: Vectorized median and mode for missing values
+    numeric_cols = df_features.select_dtypes(include='number').columns
+    numeric_cols_set = set(numeric_cols)
+
+    if not numeric_cols.empty:
+        numeric_fill = df_features[numeric_cols].median().to_dict()
+
     for col in df_features.columns:
-        if pd.api.types.is_numeric_dtype(df_features[col]):
-            fill_value = df_features[col].median()
-            numeric_fill[col] = fill_value
+        if col in numeric_cols_set:
+            fill_value = numeric_fill[col]
             df_features[col] = df_features[col].fillna(fill_value)
         else:
             fill_value = df_features[col].mode().iloc[0]
