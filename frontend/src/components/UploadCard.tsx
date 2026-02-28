@@ -1,5 +1,5 @@
 import { ChangeEvent, DragEvent, useState } from "react";
-import { Box, Button, Card, CardContent, CardHeader, LinearProgress, Typography } from "@mui/material";
+import { Alert, Box, Button, Card, CardContent, CardHeader, LinearProgress, Typography } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 import api from "../api";
@@ -9,6 +9,7 @@ import { usePipelineStore } from "../store/usePipelineStore";
 const ACCEPTED = ".csv,.xlsx";
 
 export default function UploadCard() {
+  const dataset = usePipelineStore((s) => s.dataset);
   const setDataset = usePipelineStore((s) => s.setDataset);
   const reset = usePipelineStore((s) => s.reset);
   const [loading, setLoading] = useState(false);
@@ -94,9 +95,14 @@ export default function UploadCard() {
           </Button>
           {loading && <LinearProgress sx={{ width: "100%", maxWidth: 300, mt: 1 }} />}
           {error && (
-            <Typography color="error" variant="body2">
+            <Alert severity="error" sx={{ mt: 1, width: "100%", maxWidth: 400 }}>
               {error}
-            </Typography>
+            </Alert>
+          )}
+          {dataset && !loading && !error && (
+            <Alert severity="success" sx={{ mt: 1, width: "100%", maxWidth: 400 }}>
+              Dataset uploaded: {dataset.rows.toLocaleString()} rows, {dataset.columns} columns
+            </Alert>
           )}
           <Typography variant="caption" color="text.secondary" display="block">
             Accepted: {ACCEPTED}

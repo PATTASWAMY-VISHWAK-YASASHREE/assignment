@@ -1,0 +1,3 @@
+## 2024-02-28 - Added explicit success state to file upload
+**Learning:** In a multi-step builder, users easily lose track of system state if a step completes silently. Relying on an absent "error" state or generic global state changes is insufficient. Adding an explicit success state (like an inline Alert showing dataset dimensions) immediately after a file upload significantly reduces user uncertainty.
+**Action:** Always provide explicit, inline success feedback (using established patterns like `Alert severity="success"`) for asynchronous operations like file uploads, even if subsequent steps in the UI unlock. Use specific data (e.g., row/column count) to reinforce confidence.
