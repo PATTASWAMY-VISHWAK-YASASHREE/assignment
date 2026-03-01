@@ -139,7 +139,12 @@ export default function PreprocessCard() {
                           All numeric columns
                         </Typography>
                       )}
-                      <Button color="error" startIcon={<DeleteIcon />} onClick={() => removeStep(idx)}>
+                      <Button
+                        color="error"
+                        startIcon={<DeleteIcon />}
+                        onClick={() => removeStep(idx)}
+                        aria-label={`Remove ${s.step === "standardize" ? "Standardization" : "Normalization"} step`}
+                      >
                         Remove
                       </Button>
                     </Stack>

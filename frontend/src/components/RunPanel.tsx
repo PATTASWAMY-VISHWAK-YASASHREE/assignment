@@ -25,25 +25,26 @@ export default function RunPanel() {
   const store = usePipelineStore();
   const [error, setError] = useState<string | null>(null);
 
+  const isMissingRequirements = !store.dataset || !store.targetColumn || !store.model;
+
+  let disabledReason = "";
+  if (!store.dataset) disabledReason = "Upload a dataset first.";
+  else if (!store.targetColumn) disabledReason = "Select a target column.";
+  else if (!store.model) disabledReason = "Choose a model to train.";
+  else if (store.running) disabledReason = "Pipeline is running...";
+
+  const isDisabled = store.running || isMissingRequirements;
+
   const run = async () => {
     setError(null);
-    if (!store.dataset) {
-      setError("Upload a dataset first.");
-      return;
-    }
-    if (!store.targetColumn) {
-      setError("Select a target column.");
-      return;
-    }
-    if (!store.model) {
-      setError("Choose a model to train.");
+    if (isMissingRequirements) {
       return;
     }
 
     store.setRunning(true);
     try {
       const payload = {
-        dataset_id: store.dataset.dataset_id,
+        dataset_id: store.dataset?.dataset_id,
         target_column: store.targetColumn,
         feature_columns: store.featureColumns,
         preprocess: store.preprocessSteps,
@@ -77,14 +78,24 @@ export default function RunPanel() {
           )}
           {error && <Alert severity="error">{error}</Alert>}
           <Box display="flex" alignItems="center" gap={2}>
-            <Button
-              variant="contained"
-              startIcon={store.running ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
-              onClick={run}
-              disabled={store.running}
+            <Tooltip
+              title={isDisabled ? disabledReason : ""}
+              disableHoverListener={!isDisabled}
+              disableFocusListener={!isDisabled}
+              disableTouchListener={!isDisabled}
             >
-              {store.running ? "Running..." : "Run Pipeline"}
-            </Button>
+              <span tabIndex={isDisabled ? 0 : undefined} style={{ display: "inline-flex" }}>
+                <Button
+                  variant="contained"
+                  startIcon={store.running ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
+                  onClick={run}
+                  disabled={isDisabled}
+                  sx={{ pointerEvents: isDisabled ? "none" : "auto" }}
+                >
+                  {store.running ? "Running..." : "Run Pipeline"}
+                </Button>
+              </span>
+            </Tooltip>
             {store.result && (
               <Typography color="secondary" fontWeight={600}>
                 Accuracy: {(store.result.accuracy ?? 0).toFixed(3)}
