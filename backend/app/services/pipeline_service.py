@@ -200,10 +200,18 @@ def _impute_values(
     numeric_fill: Dict[str, Any] = {}
     categorical_fill: Dict[str, Any] = {}
 
+    # Bulk calculate medians for numeric columns for performance
+    numeric_cols = [col for col in df_features.columns if pd.api.types.is_numeric_dtype(df_features[col])]
+    if numeric_cols:
+        medians = df_features[numeric_cols].median().to_dict()
+    else:
+        medians = {}
+
     for col in df_features.columns:
-        if pd.api.types.is_numeric_dtype(df_features[col]):
-            fill_value = df_features[col].median()
+        if col in numeric_cols:
+            fill_value = medians[col]
             numeric_fill[col] = fill_value
+            # Bulk fillna with a dict is slower in Pandas 3.0.1, so we apply it per-Series
             df_features[col] = df_features[col].fillna(fill_value)
         else:
             fill_value = df_features[col].mode().iloc[0]
