@@ -1,0 +1,3 @@
+## 2024-03-24 - Disabled Button Tooltips in Material-UI
+**Learning:** In Material-UI, Tooltips do not naturally work on disabled buttons because `disabled` elements do not fire pointer events (like `hover`). A common pattern is to wrap the disabled button in a `<span>`, but ensuring accessibility requires careful management of `disabledReason` to conditionally enable/disable tooltip listeners.
+**Action:** When creating disabled action buttons, wrap them in a `<span>` and provide a descriptive tooltip explaining *why* the button is disabled, so users aren't left guessing. Conditionally set `disableHoverListener`, `disableFocusListener`, and `disableTouchListener` to `true` when the button is *not* disabled to avoid redundant tooltips.
