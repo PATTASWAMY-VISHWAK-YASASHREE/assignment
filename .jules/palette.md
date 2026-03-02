@@ -1,0 +1,3 @@
+## 2024-05-18 - Drag and Drop Focus Accessibility
+**Learning:** Custom components like `<Box>` used for drag-and-drop file uploads are entirely skipped by keyboard users unless explicitly configured. They must replicate standard button behavior. Furthermore, applying an `onClick` to the entire container significantly improves usability but requires care to avoid double-firing events if a button already exists inside the container.
+**Action:** When creating custom drag-and-drop zones, always add `tabIndex={0}`, `role="button"`, an `aria-label`, and implement `onKeyDown` to handle 'Enter' and 'Space' presses. When adding a full-container click handler, check `e.target.tagName` to prevent triggering inner buttons twice. Add a `:focus-visible` outline for visual feedback.

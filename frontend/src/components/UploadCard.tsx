@@ -63,6 +63,23 @@ export default function UploadCard() {
             }
           }}
           onDrop={onDrop}
+          onClick={(e) => {
+            // Only trigger if clicking the box itself, not the button inside
+            if ((e.target as HTMLElement).tagName !== 'BUTTON' && (e.target as HTMLElement).tagName !== 'INPUT') {
+              const input = e.currentTarget.querySelector('input[type="file"]') as HTMLInputElement;
+              if (input) input.click();
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              const input = e.currentTarget.querySelector('input[type="file"]') as HTMLInputElement;
+              if (input) input.click();
+            }
+          }}
+          tabIndex={0}
+          role="button"
+          aria-label="Drag and drop file here or click to browse"
           sx={{
             border: "2px dashed",
             borderColor: isDragging ? "primary.main" : "divider",
@@ -75,6 +92,12 @@ export default function UploadCard() {
             flexDirection: "column",
             alignItems: "center",
             gap: 2,
+            cursor: "pointer",
+            "&:focus-visible": {
+              outline: "2px solid",
+              outlineColor: "primary.main",
+              outlineOffset: 2,
+            },
           }}
         >
           <CloudUploadIcon
@@ -85,7 +108,7 @@ export default function UploadCard() {
               {isDragging ? "Drop file now" : "Drag & drop file here"}
             </Typography>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              or click below to browse
+              or click anywhere to browse
             </Typography>
           </Box>
           <Button component="label" variant="contained" disabled={loading}>
