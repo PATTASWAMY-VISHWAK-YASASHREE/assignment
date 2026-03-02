@@ -51,7 +51,6 @@ async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
 
 
 def _run_pipeline_sync(request: PipelineRunRequest) -> PipelineRunResponse:
-    df = dataset_service.get_dataset(request.dataset_id)
     warnings: List[str] = []
 
     # 1. Prepare Data
@@ -90,7 +89,7 @@ def _run_pipeline_sync(request: PipelineRunRequest) -> PipelineRunResponse:
         target,
         test_size=request.split.test_size,
         random_state=request.split.random_state,
-        stratify=target if len(np.unique(target)) > 1 else None,
+        stratify=target if pd.Series(target).nunique() > 1 else None,
     )
 
     # 8. Build and Train Model
@@ -268,23 +267,33 @@ def _filter_rare_classes(
     drop_rare: bool,
     warnings: List[str]
 ) -> Tuple[pd.DataFrame, Any, bool]:
-    unique, counts = np.unique(target, return_counts=True)
-    rare = {cls: int(cnt) for cls, cnt in zip(unique, counts) if cnt < 2}
+    # Use pd.Series.value_counts instead of np.unique to significantly improve performance on categorical data
+    target_series = pd.Series(target) if not isinstance(target, pd.Series) else target
+    counts = target_series.value_counts(sort=False, dropna=False)
 
-    if rare:
+    # Identify classes with fewer than 2 samples
+    rare_mask = counts < 2
+
+    if rare_mask.any():
+        rare_classes = counts[rare_mask].index.tolist()
+        # Sort explicitly for deterministic error messages and warnings
+        rare_classes_sorted = sorted(rare_classes)
+        rare = {cls: int(counts[cls]) for cls in rare_classes_sorted}
+
         if drop_rare:
-            mask = ~pd.Series(target).isin(list(rare.keys()))
+            mask = ~target_series.isin(rare_classes)
             mask_values = mask.values
 
             df_features = df_features.loc[mask_values].reset_index(drop=True)
-            target = target[mask_values]
+
+            # Keep target as Series to avoid misalignment and explicitly reset index
+            target = target_series[mask_values].reset_index(drop=True)
 
             warnings.append(
                 "Dropped classes with <2 samples: " + ", ".join(str(k) for k in rare.keys())
             )
             # re-check after drop
-            unique, counts = np.unique(target, return_counts=True)
-            if len(unique) < 2:
+            if (len(counts) - len(rare_classes)) < 2:
                 warnings.append(
                     "Insufficient classes after dropping rare classes; skipping model training."
                 )
