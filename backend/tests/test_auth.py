@@ -1,5 +1,4 @@
 from fastapi.testclient import TestClient
-from app.core.config import settings
 
 def test_health_check_public(client: TestClient):
     # Health check should work even without auth
