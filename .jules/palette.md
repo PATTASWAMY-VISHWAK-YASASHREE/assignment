@@ -1,0 +1,3 @@
+## 2024-11-20 - Accessible Custom Drag-and-Drop Zones
+**Learning:** Custom Material-UI `<Box>` components used for drag-and-drop file uploads are entirely inaccessible to keyboard and screen reader users unless explicitly configured. Relying solely on a nested `<input type="file">` wrapped in a `<Button>` forces users to tab exactly to the button, completely missing the larger "click anywhere to upload" affordance available to mouse users.
+**Action:** When creating a custom drop zone (like an MUI `<Box>`), always add `tabIndex={0}`, `role="button"`, a descriptive `aria-label`, and `onKeyDown` handlers for `Enter` and `Space` to programmatically trigger the underlying file input. Additionally, add `:focus-visible` styles to clearly indicate keyboard focus.
