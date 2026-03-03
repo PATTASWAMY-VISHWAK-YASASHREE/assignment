@@ -1,3 +1,7 @@
 ## 2024-05-23 - Missing Config Blocking Test
 **Learning:** The `dataset_service.py` relied on `settings.MAX_UPLOAD_SIZE_BYTES` which was missing from `backend/app/core/config.py`. This prevented even basic file uploads from working, blocking reproduction of other issues.
 **Action:** Always verify basic configuration consistency when encountering seemingly unrelated errors (like "Settings object has no attribute").
+
+## 2024-05-24 - Faster Categorical Counts
+**Learning:** Using `np.unique(target, return_counts=True)` on Pandas Series with string/categorical data is significantly slower (~17x) than using native Pandas methods like `pd.Series(target).value_counts(sort=False, dropna=False)`. `np.unique` coerces object arrays and attempts sorting operations internally that are much slower than Pandas' optimized string hashing. Similarly, `pd.Series(target).nunique(dropna=False)` is faster for checking unique counts than `len(np.unique(target))`.
+**Action:** Always prefer native Pandas methods (`value_counts` or `nunique`) over NumPy methods (`np.unique`) when counting unique values or checking distinct class populations on categorical Pandas Series. Make sure to use `dropna=False` to match NumPy's handling of NaN values exactly.
