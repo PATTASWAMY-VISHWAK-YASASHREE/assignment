@@ -1,4 +1,4 @@
-import { ChangeEvent, DragEvent, useState } from "react";
+import { ChangeEvent, DragEvent, KeyboardEvent, useRef, useState } from "react";
 import { Box, Button, Card, CardContent, CardHeader, LinearProgress, Typography } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
@@ -40,6 +40,8 @@ export default function UploadCard() {
     e.target.value = "";
   };
 
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const onDrop = (e: DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
@@ -48,11 +50,27 @@ export default function UploadCard() {
     if (file) processFile(file);
   };
 
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      if (!loading) inputRef.current?.click();
+    }
+  };
+
+  const handleClick = () => {
+    if (!loading) inputRef.current?.click();
+  };
+
   return (
     <Card sx={{ height: "100%", minHeight: 320 }}>
       <CardHeader title="1. Upload Dataset" subheader="Upload CSV or Excel to get started" />
       <CardContent>
         <Box
+          role="button"
+          tabIndex={0}
+          aria-label="Upload dataset dropzone. Press enter or space to select a file."
+          onClick={handleClick}
+          onKeyDown={handleKeyDown}
           onDragOver={(e) => {
             e.preventDefault();
             if (!loading) setIsDragging(true);
@@ -75,6 +93,12 @@ export default function UploadCard() {
             flexDirection: "column",
             alignItems: "center",
             gap: 2,
+            cursor: loading ? "default" : "pointer",
+            "&:focus-visible": {
+              outline: "2px solid",
+              outlineColor: "primary.main",
+              outlineOffset: "2px",
+            },
           }}
         >
           <CloudUploadIcon
@@ -88,10 +112,10 @@ export default function UploadCard() {
               or click below to browse
             </Typography>
           </Box>
-          <Button component="label" variant="contained" disabled={loading}>
+          <Button component="span" variant="contained" disabled={loading} tabIndex={-1}>
             Select File
-            <input hidden type="file" accept={ACCEPTED} onChange={handleFile} />
           </Button>
+          <input ref={inputRef} hidden type="file" accept={ACCEPTED} onChange={handleFile} />
           {loading && <LinearProgress sx={{ width: "100%", maxWidth: 300, mt: 1 }} />}
           {error && (
             <Typography color="error" variant="body2">
