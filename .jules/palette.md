@@ -1,0 +1,3 @@
+## 2024-03-03 - Custom Drag and Drop Keyboard Accessibility
+**Learning:** Custom drag-and-drop zones implemented with generic `div` or `Box` containers are inaccessible to keyboard users unless explicitly configured. They must have a `tabIndex={0}`, an appropriate `role` (like `button`), and an `aria-label` to provide context to screen readers, plus keydown event handlers for `Enter` and `Space` to trigger the hidden file input programmatically.
+**Action:** When creating custom drag-and-drop or clickable areas that aren't native interactive elements, always add `tabIndex`, `role`, `aria-label`, and `onKeyDown` handlers for keyboard functionality. Additionally, explicitly provide `:focus-visible` styles so keyboard focus is visually apparent.

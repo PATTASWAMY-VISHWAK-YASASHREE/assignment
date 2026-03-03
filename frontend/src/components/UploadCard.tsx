@@ -1,4 +1,4 @@
-import { ChangeEvent, DragEvent, useState } from "react";
+import { ChangeEvent, DragEvent, useRef, useState, KeyboardEvent } from "react";
 import { Box, Button, Card, CardContent, CardHeader, LinearProgress, Typography } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
@@ -14,6 +14,7 @@ export default function UploadCard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const processFile = async (file: File) => {
     if (!file) return;
@@ -40,6 +41,13 @@ export default function UploadCard() {
     e.target.value = "";
   };
 
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      fileInputRef.current?.click();
+    }
+  };
+
   const onDrop = (e: DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
@@ -53,6 +61,10 @@ export default function UploadCard() {
       <CardHeader title="1. Upload Dataset" subheader="Upload CSV or Excel to get started" />
       <CardContent>
         <Box
+          role="button"
+          tabIndex={0}
+          aria-label="Upload dataset by dragging a file here or pressing Enter to select a file"
+          onKeyDown={handleKeyDown}
           onDragOver={(e) => {
             e.preventDefault();
             if (!loading) setIsDragging(true);
@@ -71,6 +83,11 @@ export default function UploadCard() {
             textAlign: "center",
             bgcolor: isDragging ? "action.hover" : "background.paper",
             transition: "all 0.2s",
+            "&:focus-visible": {
+              outline: "2px solid",
+              outlineColor: "primary.main",
+              outlineOffset: 2,
+            },
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -90,7 +107,7 @@ export default function UploadCard() {
           </Box>
           <Button component="label" variant="contained" disabled={loading}>
             Select File
-            <input hidden type="file" accept={ACCEPTED} onChange={handleFile} />
+            <input hidden type="file" accept={ACCEPTED} onChange={handleFile} ref={fileInputRef} tabIndex={-1} />
           </Button>
           {loading && <LinearProgress sx={{ width: "100%", maxWidth: 300, mt: 1 }} />}
           {error && (
