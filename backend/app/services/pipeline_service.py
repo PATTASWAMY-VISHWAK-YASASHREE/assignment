@@ -85,12 +85,13 @@ def _run_pipeline_sync(request: PipelineRunRequest) -> PipelineRunResponse:
         )
 
     # 7. Split Data
+    # Optimization: pd.Series(target).nunique() is significantly faster than len(np.unique(target)) for categorical arrays
     X_train, X_test, y_train, y_test = train_test_split(
         df_features,
         target,
         test_size=request.split.test_size,
         random_state=request.split.random_state,
-        stratify=target if len(np.unique(target)) > 1 else None,
+        stratify=target if pd.Series(target).nunique() > 1 else None,
     )
 
     # 8. Build and Train Model
