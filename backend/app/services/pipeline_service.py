@@ -90,7 +90,7 @@ def _run_pipeline_sync(request: PipelineRunRequest) -> PipelineRunResponse:
         target,
         test_size=request.split.test_size,
         random_state=request.split.random_state,
-        stratify=target if len(np.unique(target)) > 1 else None,
+        stratify=target if pd.Series(target).nunique(dropna=False) > 1 else None,
     )
 
     # 8. Build and Train Model
@@ -268,29 +268,36 @@ def _filter_rare_classes(
     drop_rare: bool,
     warnings: List[str]
 ) -> Tuple[pd.DataFrame, Any, bool]:
-    unique, counts = np.unique(target, return_counts=True)
-    rare = {cls: int(cnt) for cls, cnt in zip(unique, counts) if cnt < 2}
+    target_series = pd.Series(target)
+    counts = target_series.value_counts(sort=False, dropna=False)
+    rare_mask = counts < 2
 
-    if rare:
+    if rare_mask.any():
+        rare_classes = counts[rare_mask].index.tolist()
+        rare = {cls: int(counts[cls]) for cls in rare_classes}
+
         if drop_rare:
-            mask = ~pd.Series(target).isin(list(rare.keys()))
+            mask = ~target_series.isin(rare_classes)
             mask_values = mask.values
 
             df_features = df_features.loc[mask_values].reset_index(drop=True)
-            target = target[mask_values]
+            # Crucially, reset the index of the target Series after filtering
+            # to ensure alignment with the index-reset df_features
+            target = target_series[mask_values].reset_index(drop=True).values
 
+            # Sorted to ensure deterministic output for testing
             warnings.append(
-                "Dropped classes with <2 samples: " + ", ".join(str(k) for k in rare.keys())
+                "Dropped classes with <2 samples: " + ", ".join(str(k) for k in sorted(rare.keys()))
             )
             # re-check after drop
-            unique, counts = np.unique(target, return_counts=True)
-            if len(unique) < 2:
+            if len(counts) - len(rare_classes) < 2:
                 warnings.append(
                     "Insufficient classes after dropping rare classes; skipping model training."
                 )
                 return df_features, target, True
         else:
-            cls_list = ", ".join([f"{cls} ({cnt})" for cls, cnt in rare.items()])
+            # Sorted to ensure deterministic output for testing
+            cls_list = ", ".join([f"{cls} ({rare[cls]})" for cls in sorted(rare.keys())])
             raise ValueError(
                 "The least populated classes have fewer than 2 samples. "
                 f"Classes with too few members: {cls_list}. Enable drop_rare_classes to filter them."
