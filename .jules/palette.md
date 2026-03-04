@@ -1,0 +1,3 @@
+## 2026-03-04 - Accessible Asynchronous Results
+**Learning:** For conditional, asynchronously loaded text updates (like ad-hoc model predictions), screen readers need an `aria-live` region to be present in the DOM *before* the text update happens. Conditionally rendering the entire block (`{data && <div role="status">...</div>}`) means the screen reader often misses the announcement because the `aria-live` region itself wasn't being tracked.
+**Action:** When creating areas that display asynchronous results, always render an empty wrapper `<Box role="status" aria-live="polite">` initially. Conditionally render the *content* inside that wrapper. This guarantees the region is registered with the accessibility tree, so when content arrives, it is properly announced.
