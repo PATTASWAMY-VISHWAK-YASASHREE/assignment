@@ -89,14 +89,18 @@ export default function PlaygroundCard() {
             >
               {loading ? "Predicting..." : "Send to model"}
             </Button>
-            {predictions.length > 0 && (
-              <Typography color="secondary" fontWeight={600}>
-                Predictions: {predictions.map((p) => String(p)).join(", ")}
-              </Typography>
-            )}
+            <Box aria-live="polite" aria-atomic="true" role="status">
+              {predictions.length > 0 && (
+                <Typography color="secondary" fontWeight={600}>
+                  Predictions: {predictions.map((p) => String(p)).join(", ")}
+                </Typography>
+              )}
+            </Box>
           </Box>
 
-          {error && <Alert severity="error">{error}</Alert>}
+          <Box aria-live="assertive" aria-atomic="true" role="alert">
+            {error && <Alert severity="error">{error}</Alert>}
+          </Box>
         </Stack>
       </CardContent>
     </Card>
