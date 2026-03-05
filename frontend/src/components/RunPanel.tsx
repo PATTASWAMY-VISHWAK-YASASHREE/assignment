@@ -75,7 +75,9 @@ export default function RunPanel() {
               <LinearProgress />
             </Box>
           )}
-          {error && <Alert severity="error">{error}</Alert>}
+          <Box aria-live="assertive" role="alert" aria-atomic="true">
+            {error && <Alert severity="error">{error}</Alert>}
+          </Box>
           <Box display="flex" alignItems="center" gap={2}>
             <Button
               variant="contained"
@@ -116,18 +118,20 @@ export default function RunPanel() {
               label="Drop rare classes (≤1 sample)"
             />
           </Tooltip>
-          {store.result?.warnings?.length ? (
-            <Alert severity="warning">
-              {store.result.warnings.map((w, idx) => (
-                <div key={idx}>{w}</div>
-              ))}
-            </Alert>
-          ) : null}
-          {error?.toLowerCase().includes("least populated classes") ? (
-            <Alert severity="info">
-              Tip: Your target has classes with only one sample. Toggle "Drop rare classes" to automatically remove them and retry.
-            </Alert>
-          ) : null}
+          <Box aria-live="polite" role="status" aria-atomic="true">
+            {store.result?.warnings?.length ? (
+              <Alert severity="warning">
+                {store.result.warnings.map((w, idx) => (
+                  <div key={idx}>{w}</div>
+                ))}
+              </Alert>
+            ) : null}
+            {error?.toLowerCase().includes("least populated classes") ? (
+              <Alert severity="info" sx={{ mt: 1 }}>
+                Tip: Your target has classes with only one sample. Toggle "Drop rare classes" to automatically remove them and retry.
+              </Alert>
+            ) : null}
+          </Box>
         </Stack>
       </CardContent>
     </Card>

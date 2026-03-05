@@ -93,11 +93,13 @@ export default function UploadCard() {
             <input hidden type="file" accept={ACCEPTED} onChange={handleFile} />
           </Button>
           {loading && <LinearProgress sx={{ width: "100%", maxWidth: 300, mt: 1 }} />}
-          {error && (
-            <Typography color="error" variant="body2">
-              {error}
-            </Typography>
-          )}
+          <Box aria-live="assertive" role="alert" aria-atomic="true">
+            {error && (
+              <Typography color="error" variant="body2">
+                {error}
+              </Typography>
+            )}
+          </Box>
           <Typography variant="caption" color="text.secondary" display="block">
             Accepted: {ACCEPTED}
           </Typography>
