@@ -5,3 +5,7 @@
 ## 2025-02-17 - Slider Accessibility
 **Learning:** Sliders without `aria-label` or `getAriaValueText` are inaccessible to screen reader users. Visual marks also help cognitive load.
 **Action:** Always include `aria-label`, `getAriaValueText`, and visual `marks` for critical sliders.
+
+## 2025-02-17 - Live Regions
+**Learning:** For conditional, asynchronously loaded text updates (like predictions or errors), screen readers require the `aria-live` and `role` region to be present in the DOM *before* the update occurs.
+**Action:** Always render an empty wrapper initially, and conditionally render the dynamic content inside it.
