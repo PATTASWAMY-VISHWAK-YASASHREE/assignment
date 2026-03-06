@@ -11,6 +11,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { visuallyHidden } from "@mui/utils";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 
 import api from "../api";
@@ -89,14 +90,23 @@ export default function PlaygroundCard() {
             >
               {loading ? "Predicting..." : "Send to model"}
             </Button>
+
+            <Box sx={visuallyHidden} aria-live="polite" aria-atomic="true" role="status">
+              {loading ? "Predicting..." : ""}
+              {predictions.length > 0 ? `Predictions: ${predictions.join(", ")}` : ""}
+            </Box>
+
             {predictions.length > 0 && (
-              <Typography color="secondary" fontWeight={600}>
+              <Typography color="secondary" fontWeight={600} aria-hidden="true">
                 Predictions: {predictions.map((p) => String(p)).join(", ")}
               </Typography>
             )}
           </Box>
 
-          {error && <Alert severity="error">{error}</Alert>}
+          <Box sx={visuallyHidden} aria-live="assertive" aria-atomic="true" role="alert">
+            {error ? `Error: ${error}` : ""}
+          </Box>
+          {error && <Alert severity="error" aria-hidden="true">{error}</Alert>}
         </Stack>
       </CardContent>
     </Card>

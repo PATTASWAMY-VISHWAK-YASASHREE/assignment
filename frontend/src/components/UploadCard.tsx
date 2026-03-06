@@ -1,5 +1,6 @@
 import { ChangeEvent, DragEvent, useState } from "react";
 import { Box, Button, Card, CardContent, CardHeader, LinearProgress, Typography } from "@mui/material";
+import { visuallyHidden } from "@mui/utils";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 import api from "../api";
@@ -93,8 +94,11 @@ export default function UploadCard() {
             <input hidden type="file" accept={ACCEPTED} onChange={handleFile} />
           </Button>
           {loading && <LinearProgress sx={{ width: "100%", maxWidth: 300, mt: 1 }} />}
+          <Box sx={visuallyHidden} aria-live="assertive" aria-atomic="true" role="alert">
+            {error ? `Upload failed: ${error}` : ""}
+          </Box>
           {error && (
-            <Typography color="error" variant="body2">
+            <Typography color="error" variant="body2" aria-hidden="true">
               {error}
             </Typography>
           )}
