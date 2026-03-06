@@ -14,6 +14,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import { visuallyHidden } from "@mui/utils";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 
@@ -67,15 +68,23 @@ export default function RunPanel() {
       <CardHeader title="6. Run Pipeline" subheader="Execute the configured workflow" />
       <CardContent>
         <Stack spacing={2}>
+          <Box sx={visuallyHidden} aria-live="polite" aria-atomic="true" role="status">
+            {store.running ? "Training in progress… powering up the model" : ""}
+          </Box>
           {store.running && (
-            <Box>
+            <Box aria-hidden="true">
               <Typography variant="body2" color="text.secondary" gutterBottom>
                 Training in progress… powering up the model ⚡
               </Typography>
               <LinearProgress />
             </Box>
           )}
-          {error && <Alert severity="error">{error}</Alert>}
+
+          <Box sx={visuallyHidden} aria-live="assertive" aria-atomic="true" role="alert">
+            {error ? `Error: ${error}` : ""}
+          </Box>
+          {error && <Alert severity="error" aria-hidden="true">{error}</Alert>}
+
           <Box display="flex" alignItems="center" gap={2}>
             <Button
               variant="contained"
@@ -116,18 +125,25 @@ export default function RunPanel() {
               label="Drop rare classes (≤1 sample)"
             />
           </Tooltip>
+
+          <Box sx={visuallyHidden} aria-live="polite" aria-atomic="true" role="status">
+            {store.result?.warnings?.length ? `Warnings: ${store.result.warnings.join(". ")}` : ""}
+            {error?.toLowerCase().includes("least populated classes") ? "Tip: Your target has classes with only one sample. Toggle Drop rare classes to automatically remove them and retry." : ""}
+          </Box>
+
           {store.result?.warnings?.length ? (
-            <Alert severity="warning">
+            <Alert severity="warning" aria-hidden="true">
               {store.result.warnings.map((w, idx) => (
                 <div key={idx}>{w}</div>
               ))}
             </Alert>
           ) : null}
           {error?.toLowerCase().includes("least populated classes") ? (
-            <Alert severity="info">
+            <Alert severity="info" aria-hidden="true">
               Tip: Your target has classes with only one sample. Toggle "Drop rare classes" to automatically remove them and retry.
             </Alert>
           ) : null}
+
         </Stack>
       </CardContent>
     </Card>
