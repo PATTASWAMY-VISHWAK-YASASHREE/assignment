@@ -14,6 +14,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import { visuallyHidden } from "@mui/utils";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 
@@ -66,16 +67,22 @@ export default function RunPanel() {
     <Card sx={{ height: "100%", minHeight: 320 }}>
       <CardHeader title="6. Run Pipeline" subheader="Execute the configured workflow" />
       <CardContent>
+        <Box sx={visuallyHidden} aria-live="polite">
+          {store.running ? <div>Training in progress… powering up the model</div> : null}
+          {error ? <div>Error: {error}</div> : null}
+          {store.result ? <div>Pipeline completed successfully with accuracy {(store.result.accuracy ?? 0).toFixed(3)}</div> : null}
+          {store.result?.warnings?.length ? <div>Warnings: {store.result.warnings.join(", ")}</div> : null}
+        </Box>
         <Stack spacing={2}>
           {store.running && (
-            <Box>
+            <Box aria-hidden="true">
               <Typography variant="body2" color="text.secondary" gutterBottom>
                 Training in progress… powering up the model ⚡
               </Typography>
               <LinearProgress />
             </Box>
           )}
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && <Alert severity="error" aria-hidden="true">{error}</Alert>}
           <Box display="flex" alignItems="center" gap={2}>
             <Button
               variant="contained"
@@ -117,14 +124,14 @@ export default function RunPanel() {
             />
           </Tooltip>
           {store.result?.warnings?.length ? (
-            <Alert severity="warning">
+            <Alert severity="warning" aria-hidden="true">
               {store.result.warnings.map((w, idx) => (
                 <div key={idx}>{w}</div>
               ))}
             </Alert>
           ) : null}
           {error?.toLowerCase().includes("least populated classes") ? (
-            <Alert severity="info">
+            <Alert severity="info" aria-hidden="true">
               Tip: Your target has classes with only one sample. Toggle "Drop rare classes" to automatically remove them and retry.
             </Alert>
           ) : null}
