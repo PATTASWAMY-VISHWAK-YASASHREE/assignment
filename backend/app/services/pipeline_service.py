@@ -200,9 +200,16 @@ def _impute_values(
     numeric_fill: Dict[str, Any] = {}
     categorical_fill: Dict[str, Any] = {}
 
+    # Calculate medians in bulk for numeric columns to optimize performance
+    numeric_cols = [c for c in df_features.columns if pd.api.types.is_numeric_dtype(df_features[c])]
+    if numeric_cols:
+        numeric_medians = df_features[numeric_cols].median().to_dict()
+    else:
+        numeric_medians = {}
+
     for col in df_features.columns:
-        if pd.api.types.is_numeric_dtype(df_features[col]):
-            fill_value = df_features[col].median()
+        if col in numeric_cols:
+            fill_value = numeric_medians[col]
             numeric_fill[col] = fill_value
             df_features[col] = df_features[col].fillna(fill_value)
         else:
