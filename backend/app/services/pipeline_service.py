@@ -51,7 +51,7 @@ async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
 
 
 def _run_pipeline_sync(request: PipelineRunRequest) -> PipelineRunResponse:
-    df = dataset_service.get_dataset(request.dataset_id)
+    df = dataset_service.get_dataset(request.dataset_id)  # noqa: F841
     warnings: List[str] = []
 
     # 1. Prepare Data
@@ -242,6 +242,10 @@ def _scale_features(
             continue
 
         scaler = StandardScaler() if step.step == PreprocessType.standardize else MinMaxScaler()
+        # Ensure correct float dtype before assignment to avoid FutureWarnings and improve performance
+        for c in cols_to_scale:
+            if not pd.api.types.is_float_dtype(df_features[c]):
+                df_features[c] = df_features[c].astype(float)
         df_features[cols_to_scale] = scaler.fit_transform(df_features[cols_to_scale])
         preprocessors.append((step.step.value, cols_to_scale, scaler))
 

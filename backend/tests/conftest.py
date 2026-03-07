@@ -14,7 +14,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from app.main import create_app  # noqa: E402
 from app.services import dataset_service, pipeline_service  # noqa: E402
-from app.core.config import settings
+from app.core.config import settings  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
