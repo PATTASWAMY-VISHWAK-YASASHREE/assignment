@@ -9,6 +9,7 @@ import {
   CircularProgress,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
@@ -81,14 +82,23 @@ export default function PlaygroundCard() {
           />
 
           <Box display="flex" gap={2} alignItems="center">
-            <Button
-              variant="contained"
-              startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <SmartToyIcon />}
-              onClick={onPredict}
-              disabled={loading || !store.result?.model_id}
+            <Tooltip
+              title="Run a pipeline first to produce a model."
+              disableHoverListener={!!store.result?.model_id || loading}
+              disableFocusListener={!!store.result?.model_id || loading}
+              disableTouchListener={!!store.result?.model_id || loading}
             >
-              {loading ? "Predicting..." : "Send to model"}
-            </Button>
+              <span tabIndex={!store.result?.model_id && !loading ? 0 : undefined}>
+                <Button
+                  variant="contained"
+                  startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <SmartToyIcon />}
+                  onClick={onPredict}
+                  disabled={loading || !store.result?.model_id}
+                >
+                  {loading ? "Predicting..." : "Send to model"}
+                </Button>
+              </span>
+            </Tooltip>
             {predictions.length > 0 && (
               <Typography color="secondary" fontWeight={600}>
                 Predictions: {predictions.map((p) => String(p)).join(", ")}
