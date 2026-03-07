@@ -51,7 +51,7 @@ async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
 
 
 def _run_pipeline_sync(request: PipelineRunRequest) -> PipelineRunResponse:
-    df = dataset_service.get_dataset(request.dataset_id)
+    df = dataset_service.get_dataset(request.dataset_id)  # noqa: F841
     warnings: List[str] = []
 
     # 1. Prepare Data
@@ -179,7 +179,7 @@ def download_model_bytes(model_id: str) -> bytes:
 
 
 def _prepare_data(request: PipelineRunRequest) -> Tuple[pd.DataFrame, pd.Series, List[str]]:
-    df = dataset_service.get_dataset(request.dataset_id).copy()
+    df = dataset_service.get_dataset(request.dataset_id)
 
     if request.target_column not in df.columns:
         raise ValueError("Target column not found in dataset.")
@@ -188,8 +188,9 @@ def _prepare_data(request: PipelineRunRequest) -> Tuple[pd.DataFrame, pd.Series,
     if len(feature_cols) == 0:
         raise ValueError("No feature columns selected.")
 
+    # Only copy the subsets we need to avoid doubling memory usage for large datasets
     df_features = df[feature_cols].copy()
-    target = df[request.target_column]
+    target = df[request.target_column].copy()
 
     return df_features, target, feature_cols
 
