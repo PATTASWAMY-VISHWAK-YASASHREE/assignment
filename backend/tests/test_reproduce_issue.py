@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 from unittest.mock import MagicMock
 from app.services import pipeline_service
-from app.schemas.pipeline import PipelineRunRequest, TrainTestConfig, ModelType, PreprocessStep
+from app.schemas.pipeline import PipelineRunRequest, TrainTestConfig, ModelType
 
 @pytest.mark.asyncio
 async def test_predict_type_mismatch_fix():
