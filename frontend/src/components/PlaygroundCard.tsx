@@ -65,6 +65,39 @@ export default function PlaygroundCard() {
     <Card sx={{ height: "100%", minHeight: 280 }}>
       <CardHeader title="Playground" subheader="Send ad-hoc records to the trained model" />
       <CardContent>
+        <Box
+          sx={{
+            border: 0,
+            clip: "rect(0 0 0 0)",
+            height: "1px",
+            margin: -1,
+            overflow: "hidden",
+            padding: 0,
+            position: "absolute",
+            whiteSpace: "nowrap",
+            width: "1px",
+          }}
+          aria-live="polite"
+        >
+          {predictions.length > 0 ? `Predictions: ${predictions.map((p) => String(p)).join(", ")}` : ""}
+        </Box>
+        <Box
+          sx={{
+            border: 0,
+            clip: "rect(0 0 0 0)",
+            height: "1px",
+            margin: -1,
+            overflow: "hidden",
+            padding: 0,
+            position: "absolute",
+            whiteSpace: "nowrap",
+            width: "1px",
+          }}
+          aria-live="assertive"
+        >
+          {error || ""}
+        </Box>
+
         <Stack spacing={2}>
           {!store.result?.model_id && (
             <Alert severity="info">Run the pipeline to enable predictions and downloads.</Alert>
@@ -90,13 +123,17 @@ export default function PlaygroundCard() {
               {loading ? "Predicting..." : "Send to model"}
             </Button>
             {predictions.length > 0 && (
-              <Typography color="secondary" fontWeight={600}>
+              <Typography color="secondary" fontWeight={600} aria-hidden="true">
                 Predictions: {predictions.map((p) => String(p)).join(", ")}
               </Typography>
             )}
           </Box>
 
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && (
+            <Alert severity="error" aria-hidden="true">
+              {error}
+            </Alert>
+          )}
         </Stack>
       </CardContent>
     </Card>
