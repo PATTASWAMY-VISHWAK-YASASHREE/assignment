@@ -1,7 +1,3 @@
-## 2024-04-18 - Drag and Drop Flickering
-**Learning:** In React, `onDragLeave` fires when entering child elements, causing flicker if `isDragging` is simply set to false.
-**Action:** Always check `!e.currentTarget.contains(e.relatedTarget as Node)` before disabling drag state.
-
-## 2025-02-17 - Slider Accessibility
-**Learning:** Sliders without `aria-label` or `getAriaValueText` are inaccessible to screen reader users. Visual marks also help cognitive load.
-**Action:** Always include `aria-label`, `getAriaValueText`, and visual `marks` for critical sliders.
+## 2024-03-24 - Accessible Tooltips for Disabled Action Buttons
+**Learning:** In Material-UI (v6), adding tooltips directly to disabled `<Button>` components does not trigger the hover/focus events necessary for the tooltip to display. Furthermore, simply wrapping the button in a `<span>` is not enough for keyboard accessibility. When a button is disabled, it is removed from the tab order. If the tooltip explains *why* the button is disabled (which is a crucial UX pattern), keyboard-only and screen reader users will never discover this information if they cannot focus the element.
+**Action:** When adding explanatory tooltips to disabled buttons, always wrap the button in a `<span>`. Conditionally apply `tabIndex={0}` to the span *only* when the button is disabled. Additionally, conditionally manage the `Tooltip`'s `disableHoverListener`, `disableFocusListener`, and `disableTouchListener` props to ensure the tooltip only appears when the button is in its disabled state, preventing redundant information when the action is available.

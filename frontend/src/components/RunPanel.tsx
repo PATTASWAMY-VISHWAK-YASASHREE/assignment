@@ -77,14 +77,31 @@ export default function RunPanel() {
           )}
           {error && <Alert severity="error">{error}</Alert>}
           <Box display="flex" alignItems="center" gap={2}>
-            <Button
-              variant="contained"
-              startIcon={store.running ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
-              onClick={run}
-              disabled={store.running}
+            <Tooltip
+              title={
+                !store.dataset
+                  ? "Upload a dataset first"
+                  : !store.targetColumn
+                  ? "Select a target column first"
+                  : !store.model
+                  ? "Choose a model to train first"
+                  : ""
+              }
+              disableHoverListener={!(!store.dataset || !store.targetColumn || !store.model) || store.running}
+              disableFocusListener={!(!store.dataset || !store.targetColumn || !store.model) || store.running}
+              disableTouchListener={!(!store.dataset || !store.targetColumn || !store.model) || store.running}
             >
-              {store.running ? "Running..." : "Run Pipeline"}
-            </Button>
+              <span tabIndex={(!store.dataset || !store.targetColumn || !store.model) && !store.running ? 0 : undefined}>
+                <Button
+                  variant="contained"
+                  startIcon={store.running ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
+                  onClick={run}
+                  disabled={store.running || !store.dataset || !store.targetColumn || !store.model}
+                >
+                  {store.running ? "Running..." : "Run Pipeline"}
+                </Button>
+              </span>
+            </Tooltip>
             {store.result && (
               <Typography color="secondary" fontWeight={600}>
                 Accuracy: {(store.result.accuracy ?? 0).toFixed(3)}
