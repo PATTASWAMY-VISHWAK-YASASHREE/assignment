@@ -25,18 +25,18 @@ export default function RunPanel() {
   const store = usePipelineStore();
   const [error, setError] = useState<string | null>(null);
 
+  const disabledReason = !store.dataset
+    ? "Upload a dataset first."
+    : !store.targetColumn
+    ? "Select a target column."
+    : !store.model
+    ? "Choose a model to train."
+    : "";
+
   const run = async () => {
     setError(null);
-    if (!store.dataset) {
-      setError("Upload a dataset first.");
-      return;
-    }
-    if (!store.targetColumn) {
-      setError("Select a target column.");
-      return;
-    }
-    if (!store.model) {
-      setError("Choose a model to train.");
+    if (disabledReason) {
+      setError(disabledReason);
       return;
     }
 
@@ -77,14 +77,25 @@ export default function RunPanel() {
           )}
           {error && <Alert severity="error">{error}</Alert>}
           <Box display="flex" alignItems="center" gap={2}>
-            <Button
-              variant="contained"
-              startIcon={store.running ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
-              onClick={run}
-              disabled={store.running}
+            <Tooltip
+              title={disabledReason}
+              disableHoverListener={!disabledReason}
+              disableFocusListener={!disabledReason}
+              disableTouchListener={!disabledReason}
+              placement="top"
             >
-              {store.running ? "Running..." : "Run Pipeline"}
-            </Button>
+              <span tabIndex={disabledReason ? 0 : undefined} style={{ display: "inline-flex" }}>
+                <Button
+                  variant="contained"
+                  startIcon={store.running ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
+                  onClick={run}
+                  disabled={store.running || !!disabledReason}
+                  style={disabledReason ? { pointerEvents: "none" } : undefined}
+                >
+                  {store.running ? "Running..." : "Run Pipeline"}
+                </Button>
+              </span>
+            </Tooltip>
             {store.result && (
               <Typography color="secondary" fontWeight={600}>
                 Accuracy: {(store.result.accuracy ?? 0).toFixed(3)}
