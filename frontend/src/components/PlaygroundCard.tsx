@@ -61,10 +61,36 @@ export default function PlaygroundCard() {
     }
   };
 
+  // Screen reader status announcement
+  const getAnnouncementText = () => {
+    if (loading) return "Predicting...";
+    if (error) return `Error: ${error}`;
+    if (predictions.length > 0) return `Predictions received: ${predictions.map((p) => String(p)).join(", ")}`;
+    return "";
+  };
+
   return (
     <Card sx={{ height: "100%", minHeight: 280 }}>
       <CardHeader title="Playground" subheader="Send ad-hoc records to the trained model" />
       <CardContent>
+        {/* Permanent aria-live region for screen readers */}
+        <Box
+          aria-live="polite"
+          aria-atomic="true"
+          sx={{
+            position: "absolute",
+            width: "1px",
+            height: "1px",
+            margin: "-1px",
+            padding: 0,
+            overflow: "hidden",
+            clip: "rect(0, 0, 0, 0)",
+            border: 0,
+          }}
+        >
+          {getAnnouncementText()}
+        </Box>
+
         <Stack spacing={2}>
           {!store.result?.model_id && (
             <Alert severity="info">Run the pipeline to enable predictions and downloads.</Alert>
@@ -90,13 +116,13 @@ export default function PlaygroundCard() {
               {loading ? "Predicting..." : "Send to model"}
             </Button>
             {predictions.length > 0 && (
-              <Typography color="secondary" fontWeight={600}>
+              <Typography color="secondary" fontWeight={600} aria-hidden="true">
                 Predictions: {predictions.map((p) => String(p)).join(", ")}
               </Typography>
             )}
           </Box>
 
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && <Alert severity="error" aria-hidden="true">{error}</Alert>}
         </Stack>
       </CardContent>
     </Card>
