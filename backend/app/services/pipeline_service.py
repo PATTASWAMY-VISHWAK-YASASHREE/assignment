@@ -51,7 +51,7 @@ async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
 
 
 def _run_pipeline_sync(request: PipelineRunRequest) -> PipelineRunResponse:
-    df = dataset_service.get_dataset(request.dataset_id)
+    df = dataset_service.get_dataset(request.dataset_id)  # noqa: F841
     warnings: List[str] = []
 
     # 1. Prepare Data
@@ -170,7 +170,7 @@ def _predict_sync(model_id: str, records: List[Dict[str, Any]]) -> PredictRespon
     if artifact.label_encoder:
         preds = artifact.label_encoder.inverse_transform(preds)
 
-    return PredictResponse(predictions=[_convert_pred(v) for v in preds])
+    return PredictResponse(predictions=preds.tolist())
 
 
 def download_model_bytes(model_id: str) -> bytes:
@@ -340,12 +340,6 @@ def _get_model(model_id: str) -> TrainedModelArtifact:
         if model_id not in _model_store:
             raise ValueError("Model not found. Please re-run the pipeline.")
         return _model_store[model_id]
-
-
-def _convert_pred(value: Any) -> Any:
-    if isinstance(value, (np.generic,)):
-        return value.item()
-    return value
 
 
 def _clear_model_store():  # pragma: no cover - test helper
