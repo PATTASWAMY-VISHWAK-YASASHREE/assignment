@@ -51,7 +51,7 @@ async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
 
 
 def _run_pipeline_sync(request: PipelineRunRequest) -> PipelineRunResponse:
-    df = dataset_service.get_dataset(request.dataset_id)
+    df = dataset_service.get_dataset(request.dataset_id)  # noqa: F841
     warnings: List[str] = []
 
     # 1. Prepare Data
@@ -170,7 +170,14 @@ def _predict_sync(model_id: str, records: List[Dict[str, Any]]) -> PredictRespon
     if artifact.label_encoder:
         preds = artifact.label_encoder.inverse_transform(preds)
 
-    return PredictResponse(predictions=[_convert_pred(v) for v in preds])
+    # Optimization: Convert predictions to native Python types efficiently
+    # .tolist() natively converts numpy arrays and their items to Python scalars
+    if isinstance(preds, np.ndarray):
+        predictions = preds.tolist()
+    else:
+        predictions = [_convert_pred(v) for v in preds]
+
+    return PredictResponse(predictions=predictions)
 
 
 def download_model_bytes(model_id: str) -> bytes:

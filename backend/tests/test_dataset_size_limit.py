@@ -1,10 +1,8 @@
-import asyncio
 from io import BytesIO
 from unittest.mock import patch
 import pytest
 from starlette.datastructures import UploadFile
 from app.services import dataset_service
-from app.core.config import settings
 
 @pytest.mark.asyncio
 async def test_save_dataset_rejects_large_file():
